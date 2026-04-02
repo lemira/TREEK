@@ -1,3 +1,3 @@
 # TREEK
 
-Template for Kunena with a tree-based theme structure
+Kunena template with a tree-like topic structure

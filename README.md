@@ -1,2 +1,3 @@
 # TREEK
-Template for Kunena 
+
+Template for Kunena with a tree-based theme structure

@@ -15,6 +15,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Kunena\Forum\Libraries\Topic\KunenaForumTopicHelper;
 use Kunena\Forum\Libraries\Message\KunenaForumMessage;
+use Kunena\Forum\Libraries\Message\KunenaForumMessageHelper;
 
 /**
  * TreekModel - построение дерева темы на основе объектов Kunena 7
@@ -38,7 +39,7 @@ class TreekModel extends BaseDatabaseModel
         }
 
         // К- возвращает массив объектов, где ключи — это ID сообщений
-        $this->allPosts = $topic->getMessages();
+        $this->allPosts = \Kunena\Forum\Libraries\Message\KunenaForumMessageHelper::getMessagesByTopic($threadId);  // получаем все сообщения темы
         
         // Формируем список только разрешенных к показу ID (аналог вашего getAllThreadPosts)
         $this->finalPostIds = [];

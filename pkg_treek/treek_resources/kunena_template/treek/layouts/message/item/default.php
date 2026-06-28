@@ -1,0 +1,237 @@
+<?php
+
+/**
+ * Kunena Component
+ *
+ * @package         Kunena.Template.Aurelia
+ * @subpackage      Layout.Message
+ *
+ * @copyright       Copyright (C) 2008 - 2026 Kunena Team. All rights reserved.
+ * @license         https://www.gnu.org/copyleft/gpl.html GNU/GPL
+ * @link            https://www.kunena.org
+ **/
+
+defined('_JEXEC') or die();
+
+use Kunena\Forum\Libraries\Date\KunenaDate;
+use Kunena\Forum\Libraries\Forum\Message\KunenaMessage;
+use Kunena\Forum\Libraries\Icons\KunenaIcons;
+use Kunena\Forum\Libraries\Layout\KunenaLayout;
+use Kunena\Forum\Libraries\Route\KunenaRoute;
+use Kunena\Forum\Libraries\Template\KunenaTemplate;
+use Joomla\CMS\Language\Text;
+use Joomla\CMS\Session\Session;
+
+// --- TREEK: только кнопка (инициализация вынесена в treek_template.php) ---
+$treekTopicId  = $this->topic->id;
+$treekPostId   = $this->message->id;
+$treekToken    = Session::getFormToken();
+$treekTopicUrl = (string) \Kunena\Forum\Libraries\Route\KunenaRoute::getTopicUrl($this->topic);
+
+$message              = $this->message;
+$isReply              = $this->message->id != $this->topic->first_post_id;
+
+$signature            = $this->profile->getSignature();
+$attachments          = $message->getAttachments();
+$attachs              = $message->getNbAttachments();
+$subjectlengthmessage = $this->ktemplate->params->get('SubjectLengthMessage', 20);
+
+$list = [];
+?>
+
+<small class="float-end">
+    <?php if ($this->ipLink && !empty($this->message->ip)) : ?>
+        <?php echo KunenaIcons::ip(); ?>
+        <span class="ip"> <?php echo $this->ipLink; ?> </span>
+    <?php endif; ?>
+    <span class="text-muted">
+        <?php echo KunenaIcons::clock(); ?>
+        <?php echo $message->getTime()->toSpan('config_postDateFormat', 'config_postDateFormatHover'); ?>
+        <?php if ($message->modified_time) :
+        ?> - <?php echo KunenaIcons::edit() . ' ' . $message->getModifiedTime()->toSpan('config_postDateFormat', 'config_postDateFormatHover');
+            endif; ?>
+        <a href="#<?php echo $this->message->id; ?>" id="<?php echo $this->message->id; ?>" rel="canonical">#<?php echo $this->getNumlink($this->location); ?></a>
+        <span class="d-block d-sm-none"><?php echo Text::_('COM_KUNENA_BY') . ' ' . $message->getAuthor()->getLink(); ?></span>
+    </span>
+</small>
+
+<div class="shadow-none p-4 mb-5 rounded">
+    <div class="mykmsg-header">
+        <?php
+        // TreeK patch v1.0: replace "Replied by X on topic Y" with "⇑ [subject]"
+        if ($isReply) {
+            // TreeK patch v1.0: get parent post URL with correct page number
+$arrow = '<a href="#" class="treek-parent-link" data-post-id="' . (int) $message->id . '" data-topic-id="' . (int) $this->topic->id . '" data-token="' . Session::getFormToken() . '" data-bs-toggle="tooltip" '
+    . 'title="' . Text::_('COM_KUNENA_TREEK_GOTO_PARENT') . '">'
+    . Text::_('COM_KUNENA_TREEK_ARROW_UP') . '</a>';
+
+            $subject = $message->subject
+                ? $this->escape($message->subject)
+                : '<em>' . Text::_('COM_KUNENA_RE_TREEK') . ' '
+                  . $this->escape($this->topic->subject) . '</em>';
+            echo $arrow . ' ' . $subject;
+        } else {
+            echo Text::sprintf('COM_KUNENA_MESSAGE_CREATED_NEW',
+                $message->getAuthor()->getLink(),
+                $this->getTopicLink($this->message->getTopic(), $this->message,
+                    $this->message->displayField('subject'), null,
+                    KunenaTemplate::getInstance()->tooltips() . ' topictitle'));
+        }
+        ?>
+        
+        <button type="button"
+                class="treek-trigger treek-icon-trigger"
+                data-topic-id="<?php echo $treekTopicId; ?>"
+                data-token="<?php echo $treekToken; ?>"
+                data-topic-url="<?php echo $this->escape($treekTopicUrl); ?>"
+                data-current-post-id="<?php echo $treekPostId; ?>"
+                title="<?php echo Text::_('TREEK_SHOW_IN_TREE'); ?>">
+            <?php echo Text::_('TREEK_ICON'); ?>
+        </button>
+        
+        <?php if (!empty($this->message->pm) && $this->config->privateMessage) : ?>
+            <div class="kmsg">
+                <div class="kmsgtext-hide">
+                    <?php foreach ($this->message->pm as $pm) {
+                        echo $pm->displayField('body');
+                    } ?>
+                </div>
+            </div>
+        <?php endif ?>
+    </div>
+    
+    <div class="kmsg">
+        <?php if (!$this->me->userid && !$isReply) :
+            echo $message->displayField('message');
+        else :
+            echo (!$this->me->userid && $this->config->teaser) ? Text::_('COM_KUNENA_TEASER_TEXT') : $this->message->displayField('message');
+        endif; ?>
+    </div>
+    <?php if ($signature) : ?>
+        <div class="ksig">
+            <hr>
+            <span class="ksignature"><?php echo $signature; ?></span>
+        </div>
+    <?php endif ?>
+</div>
+<?php if ($this->config->reportMsg && $this->me->exists()) : ?>
+    <div class="report pb-5">
+        <?php echo KunenaLayout::factory('Widget/Button')
+            ->setProperties([
+                'url'    => '#report' . $message->id . '',
+                'name'   => 'report',
+                'scope'  => 'message',
+                'type'   => 'user',
+                'id'     => 'btn_report',
+                'normal' => '',
+                'icon'   => KunenaIcons::reportname(),
+                'modal'  => 'modal',
+                'pullright' => 'pullright',
+            ]); ?>
+    </div>
+    <?php if ($this->me->isModerator($this->topic->getCategory()) || $this->config->userReport || !$this->config->userReport && $this->me->userid != $this->message->userid) : ?>
+        <div id="report<?php echo $this->message->id; ?>" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="false" style="display: none;">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="reportModalLabel">
+                            <?php echo Text::_('COM_KUNENA_REPORT_TO_MODERATOR'); ?>
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <?php echo $this->subRequest('Topic/Report')->set('id', $this->topic->id); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+    <?php endif; ?>
+<?php endif; ?>
+
+<?php if (!empty($attachments)) :
+    if (!$this->me->exists() && ($this->config->showImgForGuest || $this->config->showFileForGuest) || $this->me->exists() && $attachs->inline != count($attachments)) : ?>
+        <div class="card pb-3 pd-3 mb-3">
+            <?php if ($this->canSeeAttachments($attachments, $attachs, $this->topic)) : ?>
+                <div class="card-header"><?php echo Text::_('COM_KUNENA_ATTACHMENTS'); ?></div>
+                <div class="card-body kattach">
+            <?php endif; ?>
+                <ul class="thumbnails" style="list-style:none;">
+                    <?php foreach ($attachments as $attachment) :
+                        if (!$attachment->protected) : ?>
+                            <?php if ($attachment->isAudio()) :
+                                echo $attachment->getLayout()->render('audio'); ?>
+                            <?php elseif ($attachment->isVideo()) :
+                                echo $attachment->getLayout()->render('video'); ?>
+                            <?php elseif (!$attachment->inline) : ?>
+                                <li class="col-md-3 text-center">
+                                    <div class="thumbnail">
+                                        <?php echo $attachment->getLayout()->render('thumbnail'); ?>
+                                        <?php echo $attachment->getLayout()->render('textlink'); ?>
+                                    </div>
+                                </li>
+                            <?php endif; ?>
+                        <?php elseif ($attachment->isAuthorised('private')): ?>
+                            <?php if ($attachment->isAudio()) :
+                                echo $attachment->getLayout()->render('audio'); ?>
+                            <?php elseif ($attachment->isVideo()) :
+                                echo $attachment->getLayout()->render('video'); ?>
+                            <?php elseif (!$attachment->inline) : ?>
+                                <li class="col-md-3 text-center">
+                                    <div class="thumbnail">
+                                        <?php echo $attachment->getLayout()->render('thumbnail'); ?>
+                                        <?php echo $attachment->getLayout()->render('textlink'); ?>
+                                    </div>
+                                </li>
+                            <?php endif; ?>
+                        <?php elseif ($attachment->protected < 32 && !$attachment->inline) : ?>
+                            <li class="col-md-3 text-center">
+                                <div class="thumbnail">
+                                    <?php echo $attachment->getLayout()->render('thumbnail'); ?>
+                                    <?php echo $attachment->getLayout()->render('textlink'); ?>
+                                </div>
+                            </li>
+                    <?php endif;
+                    endforeach; ?>
+                </ul>
+            <?php if ($this->canSeeAttachments($attachments, $attachs, $this->topic)) : ?>
+                </div>
+                <div class="clearfix"></div>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+<?php endif; ?>
+
+<?php if ($message->modified_by && $this->config->editMarkup) :
+    $dateshown = $datehover = '';
+    if ($message->modified_time) {
+        $datehover = 'data-bs-toggle="tooltip" title="' . KunenaDate::getInstance($message->modified_time)->toKunena('config_postDateFormatHover') . '"';
+        $dateshown = KunenaDate::getInstance($message->modified_time)->toKunena('config_postDateFormat') . ' ';
+    }
+?>
+    <div class="alert alert-info d-none d-sm-block" <?php echo $datehover ?>>
+        <?php echo Text::sprintf('COM_KUNENA_EDITING_LASTEDIT_ON_BY', $dateshown, $message->getModifier()->getLink(null, null, '', '', null, $this->category->id)); ?>
+        <?php if ($message->modified_reason) {
+            echo Text::_('COM_KUNENA_REASON') . ': ' . $this->escape($message->modified_reason);
+        } ?>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($this->thankyou)) : ?>
+    <div class="kmessage-thankyou">
+        <?php
+        foreach ($this->thankyou as $userid => $thank) {
+            if (!empty($this->thankyou_delete[$userid])) {
+                $list[] = $thank . ' <a data-bs-toggle="tooltip" title="' . Text::_('COM_KUNENA_BUTTON_THANKYOU_REMOVE_LONG') . '" href="'
+                    . $this->thankyou_delete[$userid] . '">' . KunenaIcons::cancel() . '</a>';
+            } else {
+                $list[] = $thank;
+            }
+        }
+        echo KunenaIcons::thumbsup() . Text::_('COM_KUNENA_THANKYOU') . ': ' . implode(', ', $list) . ' ';
+        if ($this->more_thankyou) {
+            echo Text::sprintf('COM_KUNENA_THANKYOU_MORE_USERS', $this->more_thankyou);
+        }
+        ?>
+    </div>
+<?php endif;

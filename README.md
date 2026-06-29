@@ -74,6 +74,3 @@ If you like this project, you can make a donation via PayPal:
 
 TreeK Free is distributed under the GNU General Public License v3.0. See
 [LICENSE](LICENSE).
-
-
-

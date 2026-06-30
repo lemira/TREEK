@@ -22,6 +22,14 @@ treek_resources/kunena_template/treek
 Внутренний `treek/README.md` пока содержит старые заметки upstream Aurelia.
 Его стоит разобрать отдельно, когда дойдём до чистки самого шаблона.
 
+## TreeK-правки
+
+Описание известных TreeK-изменений в layout-файлах и JavaScript:
+
+```text
+TREEK_CHANGES.md
+```
+
 \\
 для установки по-прежнему использовать:
 W:\Git-treek\treek-source\dist\pkg_treek.zip

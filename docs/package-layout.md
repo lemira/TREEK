@@ -76,6 +76,10 @@ Kunena overrides are currently copied into `src/kunena-overrides` for source
 visibility. The installer still reads the working copies from
 `pkg_treek/treek_resources/kunena_overrides`.
 
+The Kunena template is currently copied into `src/kunena-template/treek` for
+source visibility. The installer still reads the working template from
+`pkg_treek/treek_resources/kunena_template/treek`.
+
 ## Candidate target layout
 
 ```text

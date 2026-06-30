@@ -23,8 +23,8 @@ src/
   `pkg_treek/packages/plg_ajax_treek.zip`.
 - `file-treek-kunena/` contains source extracted from
   `pkg_treek/packages/file_treek_kunena.zip`.
-- `kunena-template/` is reserved for the TreeK Kunena template source that is
-  currently installed from `pkg_treek/treek_resources/kunena_template/treek`.
+- `kunena-template/` contains the TreeK Kunena template copied from
+  `pkg_treek/treek_resources/kunena_template/treek`.
 - `kunena-overrides/` contains patched Kunena files and Kunena language
   fragments copied from `pkg_treek/treek_resources/kunena_overrides`.
 

@@ -1,16 +1,8 @@
-# TreeK Kunena Template Source
+# Шаблон Kunena TreeK
 
-Source copied from the current installer resource directory:
+Здесь лежит исходник шаблона Kunena `treek`.
 
-```text
-pkg_treek/treek_resources/kunena_template/treek
-```
-
-The working installer still copies the template from `pkg_treek`. Until a build
-step exists, keep this source tree and the installer resource directory in sync
-manually.
-
-## Current structure
+## Структура
 
 ```text
 treek/
@@ -21,6 +13,15 @@ treek/
   template.php
 ```
 
-The `treek/README.md` file inside the template still contains upstream Aurelia
-template notes and should be reviewed separately from this source-layout
-migration.
+При сборке package этот каталог попадает в:
+
+```text
+treek_resources/kunena_template/treek
+```
+
+Внутренний `treek/README.md` пока содержит старые заметки upstream Aurelia.
+Его стоит разобрать отдельно, когда дойдём до чистки самого шаблона.
+
+\\
+для установки по-прежнему использовать:
+W:\Git-treek\treek-source\dist\pkg_treek.zip

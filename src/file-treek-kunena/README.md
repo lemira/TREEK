@@ -1,36 +1,32 @@
-# TreeK Kunena File Package Source
+# Joomla file-пакет TreeK/Kunena
 
-Source extracted from the current nested file package archive:
+Исходники вложенного Joomla file-пакета:
 
 ```text
-pkg_treek/packages/file_treek_kunena.zip
+file_treek_kunena
 ```
 
-The working Joomla package still installs the ZIP from `pkg_treek/packages`.
-Until a build step exists, keep this source tree and the nested ZIP in sync
-manually.
+При сборке package этот каталог упаковывается во вложенный архив
+`packages/file_treek_kunena.zip`.
 
-## Build check
+## Проверка сборки
 
-Build a temporary ZIP from this source tree:
+Собрать временный ZIP из этого каталога:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/build-file-treek-kunena.ps1
 ```
 
-By default, the script writes `file_treek_kunena.zip` to the Windows temp
-folder. It does not replace `pkg_treek/packages/file_treek_kunena.zip` unless an
-explicit `-OutputPath` is passed.
+По умолчанию скрипт пишет `file_treek_kunena.zip` во временную папку Windows.
 
-## Current structure
+## Структура
 
 ```text
 file_treek_kunena.xml
 root/
 ```
 
-- `file_treek_kunena.xml` is the Joomla file extension manifest.
-- `root/` contains files installed into the Joomla site root according to the
-  manifest fileset.
+- `file_treek_kunena.xml` — manifest Joomla file extension.
+- `root/` — файлы, устанавливаемые в корень сайта по fileset из manifest.
 
-At the moment this package installs only `root/media/treek/dummy/index.html`.
+Сейчас пакет устанавливает только `root/media/treek/dummy/index.html`.

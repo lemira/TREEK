@@ -1,8 +1,12 @@
 param(
-    [string] $PackageDir = (Join-Path $PSScriptRoot '..\pkg_treek')
+    [string] $PackageDir = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($PackageDir)) {
+    throw 'Pass -PackageDir with a temporary release directory. This script is normally called by tools/build-package.ps1.'
+}
 
 function Resolve-ExistingPath {
     param(
@@ -116,4 +120,3 @@ try {
 }
 
 Write-Output 'TreeK package verification passed.'
-

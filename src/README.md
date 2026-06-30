@@ -1,12 +1,8 @@
-# TreeK Source Layout
+# Исходники TreeK
 
-This directory is the planned source-oriented layout for TreeK.
+`src` — основной источник проекта.
 
-For now, it is documentation only. The release-ready package layout in
-`pkg_treek` remains the source of truth for installation until the build flow is
-introduced.
-
-## Planned areas
+## Разделы
 
 ```text
 src/
@@ -17,18 +13,14 @@ src/
   kunena-overrides/
 ```
 
-- `package/` contains package-level source files: manifest, installer script,
-  and package language files.
-- `plugin-ajax-treek/` contains source extracted from
-  `pkg_treek/packages/plg_ajax_treek.zip`.
-- `file-treek-kunena/` contains source extracted from
-  `pkg_treek/packages/file_treek_kunena.zip`.
-- `kunena-template/` contains the TreeK Kunena template copied from
-  `pkg_treek/treek_resources/kunena_template/treek`.
-- `kunena-overrides/` contains patched Kunena files and Kunena language
-  fragments copied from `pkg_treek/treek_resources/kunena_overrides`.
+- `package/` — manifest пакета, install script и языки package-расширения.
+- `plugin-ajax-treek/` — исходники AJAX-плагина TreeK.
+- `file-treek-kunena/` — исходники Joomla file-пакета TreeK/Kunena.
+- `kunena-template/` — шаблон Kunena `treek`.
+- `kunena-overrides/` — patched-файлы Kunena и языковые фрагменты.
 
-## Rule for the cleanup phase
+Итоговый установочный ZIP собирается командой:
 
-Do not move working installer inputs into `src` until the corresponding package
-manifest, installer script, and build/package process are updated together.
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\build-package.ps1
+```

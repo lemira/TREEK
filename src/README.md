@@ -17,8 +17,8 @@ src/
   kunena-overrides/
 ```
 
-- `package/` is reserved for package-level source files: manifest, installer
-  script, package language files, and future packaging/build notes.
+- `package/` contains package-level source files: manifest, installer script,
+  and package language files.
 - `plugin-ajax-treek/` contains source extracted from
   `pkg_treek/packages/plg_ajax_treek.zip`.
 - `file-treek-kunena/` contains source extracted from

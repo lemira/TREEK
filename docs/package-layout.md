@@ -5,10 +5,14 @@ path. It is deliberately descriptive: no installer behavior changes are implied.
 
 ## Current source of truth
 
-`pkg_treek` is both:
+Originally, `pkg_treek` was both:
 
 - the editable source tree for the first cleanup phase
 - the release-ready Joomla package directory
+
+The current package builder now reads source files from `src` and writes the
+installable ZIP to `dist/pkg_treek.zip`. The `pkg_treek` directory remains as a
+legacy release-layout reference while the migration is in progress.
 
 The installer depends on these paths:
 
@@ -80,7 +84,7 @@ The Kunena template is currently copied into `src/kunena-template/treek` for
 source visibility. The installer still reads the working template from
 `pkg_treek/treek_resources/kunena_template/treek`.
 
-Build a release package ZIP into `dist/pkg_treek.zip`:
+Build a release package ZIP from `src` into `dist/pkg_treek.zip`:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File tools/build-package.ps1

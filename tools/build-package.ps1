@@ -128,7 +128,7 @@ function Compress-DirectoryForJoomla {
 }
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
-$packageSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'pkg_treek') -Description 'Package source directory' -PathType Container
+$packageSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'src\package') -Description 'Package source directory' -PathType Container
 $pluginSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'src\plugin-ajax-treek') -Description 'AJAX plugin source directory' -PathType Container
 $filePackageSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'src\file-treek-kunena') -Description 'Kunena file package source directory' -PathType Container
 $overridesSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'src\kunena-overrides') -Description 'Kunena overrides source directory' -PathType Container

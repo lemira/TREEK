@@ -25,9 +25,8 @@ src/
   `pkg_treek/packages/file_treek_kunena.zip`.
 - `kunena-template/` is reserved for the TreeK Kunena template source that is
   currently installed from `pkg_treek/treek_resources/kunena_template/treek`.
-- `kunena-overrides/` is reserved for patched Kunena files and Kunena language
-  fragments that are currently installed from
-  `pkg_treek/treek_resources/kunena_overrides`.
+- `kunena-overrides/` contains patched Kunena files and Kunena language
+  fragments copied from `pkg_treek/treek_resources/kunena_overrides`.
 
 ## Rule for the cleanup phase
 

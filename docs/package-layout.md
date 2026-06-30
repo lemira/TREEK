@@ -72,6 +72,10 @@ Build a temporary Kunena file package ZIP from `src/file-treek-kunena`:
 powershell -ExecutionPolicy Bypass -File tools/build-file-treek-kunena.ps1
 ```
 
+Kunena overrides are currently copied into `src/kunena-overrides` for source
+visibility. The installer still reads the working copies from
+`pkg_treek/treek_resources/kunena_overrides`.
+
 ## Candidate target layout
 
 ```text

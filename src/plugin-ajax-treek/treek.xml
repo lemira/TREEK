@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="ajax" method="upgrade">
+
+    <name>Treek - Add-on for Kunena Forum</name>
+    <author>Leonid Ratner</author>
+    <creationDate>April 2026</creationDate>
+    <copyright>Copyright (C) 2026 Leonid Ratner. All rights reserved.</copyright>
+
+    <license>GNU General Public License v3.0</license>
+    <version>1.1.4</version>
+    <description>AJAX-plugin for Kunena 7 topic tree. Enable at System - Plugins - Treek.</description>
+
+    <files>
+        <filename plugin="treek">treek.php</filename>
+        <folder>src</folder>
+        <folder>language</folder>
+    </files>
+
+    <!-- Медиа-файлы для публичной части (CSS) -->
+    <media destination="plg_ajax_treek" folder="media">
+    <folder>css</folder>
+    <folder>js</folder>
+</media>
+
+    <config>
+        <fields name="params">
+        
+<fieldset name="basic" label="TreeK diagnostics">
+               
+<field
+    name="debug_ajax"
+    type="list"
+    default="0"
+    label="Debug AJAX log"
+    description="Writes TreeK AJAX diagnostics to Joomla log file treek_ajax.php">
+    <option value="0">No</option>
+    <option value="1">Yes</option>
+</field>
+
+</fieldset>
+
+        </fields>
+    </config>
+
+</extension>

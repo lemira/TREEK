@@ -50,6 +50,83 @@ function Assert-ZipHasEntry {
     }
 }
 
+function Add-ZipDirectoryEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchive] $Archive,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EntryName
+    )
+
+    $Archive.CreateEntry($EntryName.TrimEnd('/') + '/') | Out-Null
+}
+
+function Add-ZipFileEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchive] $Archive,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SourceFile,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EntryName
+    )
+
+    $normalizedName = $EntryName -replace '\\', '/'
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive, $SourceFile, $normalizedName) | Out-Null
+}
+
+function Get-RelativeZipPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $rootFullPath = [System.IO.Path]::GetFullPath($Root).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $pathFullPath = [System.IO.Path]::GetFullPath($Path)
+
+    if (-not $pathFullPath.StartsWith($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Path is not inside root: $Path"
+    }
+
+    return $pathFullPath.Substring($rootFullPath.Length) -replace '\\', '/'
+}
+
+function Compress-DirectoryForJoomla {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $SourceDir,
+
+        [Parameter(Mandatory = $true)]
+        [string] $OutputPath
+    )
+
+    Add-Type -AssemblyName System.IO.Compression
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+    $archive = [System.IO.Compression.ZipFile]::Open($OutputPath, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        $directories = Get-ChildItem -LiteralPath $SourceDir -Directory -Recurse | Sort-Object FullName
+        foreach ($directory in $directories) {
+            $relative = Get-RelativeZipPath -Root $SourceDir -Path $directory.FullName
+            Add-ZipDirectoryEntry -Archive $archive -EntryName $relative
+        }
+
+        $files = Get-ChildItem -LiteralPath $SourceDir -File -Recurse | Sort-Object FullName
+        foreach ($file in $files) {
+            $relative = Get-RelativeZipPath -Root $SourceDir -Path $file.FullName
+            Add-ZipFileEntry -Archive $archive -SourceFile $file.FullName -EntryName $relative
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
+
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $packageSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'pkg_treek') -Description 'Package source directory' -PathType Container
 $pluginSource = Resolve-ExistingPath -Path (Join-Path $repoRoot 'src\plugin-ajax-treek') -Description 'AJAX plugin source directory' -PathType Container
@@ -63,7 +140,9 @@ $tempPackage = Join-Path $tempRoot 'pkg_treek'
 New-Item -ItemType Directory -Path $tempPackage | Out-Null
 
 try {
-    Copy-Item -Path (Join-Path $packageSource '*') -Destination $tempPackage -Recurse -Force
+    Copy-Item -LiteralPath (Join-Path $packageSource 'pkg_treek.xml') -Destination $tempPackage -Force
+    Copy-Item -LiteralPath (Join-Path $packageSource 'treek_install_script.php') -Destination $tempPackage -Force
+    Copy-Item -LiteralPath (Join-Path $packageSource 'language') -Destination $tempPackage -Recurse -Force
 
     $tempPackagesDir = Join-Path $tempPackage 'packages'
     New-Item -ItemType Directory -Path $tempPackagesDir -Force | Out-Null
@@ -81,7 +160,11 @@ try {
         Remove-Item -LiteralPath $tempOverrides -Recurse -Force
     }
     New-Item -ItemType Directory -Path $tempOverrides | Out-Null
-    Copy-Item -Path (Join-Path $overridesSource '*') -Destination $tempOverrides -Recurse -Force
+    Get-ChildItem -LiteralPath $overridesSource -File |
+        Where-Object { $_.Name -ne 'README.md' } |
+        ForEach-Object {
+            Copy-Item -LiteralPath $_.FullName -Destination $tempOverrides -Force
+        }
 
     $tempTemplate = Join-Path $tempPackage 'treek_resources\kunena_template\treek'
     if (Test-Path -LiteralPath $tempTemplate) {
@@ -103,7 +186,7 @@ try {
         Remove-Item -LiteralPath $outputFullPath -Force
     }
 
-    Compress-Archive -Path (Join-Path $tempPackage '*') -DestinationPath $outputFullPath -Force
+    Compress-DirectoryForJoomla -SourceDir $tempPackage -OutputPath $outputFullPath
 
     Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'pkg_treek.xml'
     Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'treek_install_script.php'

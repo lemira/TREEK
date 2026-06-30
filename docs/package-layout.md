@@ -80,6 +80,16 @@ The Kunena template is currently copied into `src/kunena-template/treek` for
 source visibility. The installer still reads the working template from
 `pkg_treek/treek_resources/kunena_template/treek`.
 
+Build a release package ZIP into `dist/pkg_treek.zip`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build-package.ps1
+```
+
+The package builder creates a temporary release layout, rebuilds both nested ZIP
+packages from `src`, copies Kunena resources from `src`, verifies the temporary
+package layout, then writes the final ZIP to `dist`.
+
 ## Candidate target layout
 
 ```text

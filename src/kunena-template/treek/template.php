@@ -26,6 +26,10 @@ use Joomla\CMS\Session\Session;
  */
 class KunenaTemplatetreek extends KunenaTemplate
 {
+    private const TREEK_VIEW_CONTEXT = 'treek_view';
+
+    private ?array $treekViewFeatures = null;
+
     protected $default = ['treek'];
 
     protected $pathTypes = [
@@ -84,6 +88,9 @@ class KunenaTemplatetreek extends KunenaTemplate
             // Подключаем стили и скрипт TreeK
             $doc->addStyleSheet('media/plg_ajax_treek/css/treek.css');
             $doc->addScript('media/plg_ajax_treek/js/treek.js?v=' . time());
+
+            $treekViewFeatures = json_encode($this->loadTreekViewFeatures(), JSON_UNESCAPED_UNICODE);
+            $doc->addScriptDeclaration("window.treekViewFeatures = {$treekViewFeatures};");
 
 // Языковые строки для JS: автоматически берём все TREEK_* ключи из текущего ini-файла.
 $lang = Factory::getLanguage();
@@ -205,6 +212,80 @@ EOF;
         $this->addScriptOptions('com_kunena.tooltips', $this->params->get('tooltips'));
 
         parent::initialize();
+    }
+
+    public function treekFeature(string $feature): bool
+    {
+        $features = $this->loadTreekViewFeatures();
+
+        return !empty($features[$feature]);
+    }
+
+    private function loadTreekViewFeatures(): array
+    {
+        if ($this->treekViewFeatures !== null) {
+            return $this->treekViewFeatures;
+        }
+
+        $features = $this->getDefaultTreekViewFeatures();
+        $userId = (int) Factory::getApplication()->getIdentity()->id;
+
+        if ($userId <= 0) {
+            $this->treekViewFeatures = $features;
+
+            return $this->treekViewFeatures;
+        }
+
+        try {
+            $db = Factory::getContainer()->get('DatabaseDriver');
+            $query = $db->getQuery(true)
+                ->select($db->quoteName('settings'))
+                ->from($db->quoteName('#__treek_user_parameters'))
+                ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
+                ->where($db->quoteName('context') . ' = ' . $db->quote(self::TREEK_VIEW_CONTEXT));
+
+            $db->setQuery($query);
+            $json = (string) $db->loadResult();
+        } catch (\Throwable $e) {
+            $this->treekViewFeatures = $features;
+
+            return $this->treekViewFeatures;
+        }
+
+        if ($json === '') {
+            $this->treekViewFeatures = $features;
+
+            return $this->treekViewFeatures;
+        }
+
+        $saved = json_decode($json, true);
+
+        if (!is_array($saved)) {
+            $this->treekViewFeatures = $features;
+
+            return $this->treekViewFeatures;
+        }
+
+        foreach (array_keys($features) as $key) {
+            if (array_key_exists($key, $saved)) {
+                $features[$key] = (bool) $saved[$key];
+            }
+        }
+
+        $this->treekViewFeatures = $features;
+
+        return $this->treekViewFeatures;
+    }
+
+    private function getDefaultTreekViewFeatures(): array
+    {
+        return [
+            'parent_post_navigation' => false,
+            'reply_form_treek_look' => false,
+            'subject_suffix' => false,
+            'attachments_toggle' => false,
+            'inline_action_buttons' => false,
+        ];
     }
 
     // === Остальные методы getButton, getIcon, getImage — оставляем без изменений ===

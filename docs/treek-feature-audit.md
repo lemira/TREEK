@@ -51,11 +51,13 @@ Kunena/template, будущие значения лучше хранить ли�
 Предпочтительный вариант для сопровождения:
 
 ```text
-context = tree
+context = default
 context = treek_view
 ```
 
-Так таблица остаётся одной, но смысл настроек не смешивается.
+`default` сейчас используется существующими настройками дерева. `treek_view`
+добавляется для пользовательских флагов вмешательства в Kunena/template. Так
+таблица остаётся одной, но смысл настроек не смешивается.
 
 Если флаги называются положительно, например:
 
@@ -331,7 +333,9 @@ src/kunena-template/treek/assets/js/treek_view.js
 attachments_toggle
 ```
 
-Рекомендация: сделать полностью опциональным.
+Статус: подключён как первый runtime-флаг TreeKView. Если
+`window.treekViewFeatures.attachments_toggle` выключен или отсутствует,
+attachments остаются в штатном виде Kunena.
 
 ### Inline action buttons
 
@@ -392,9 +396,9 @@ if ($this->treekFeature('subject_suffix')) {
 Возможная форма будущего условия:
 
 ```js
-const features = window.treekFeatures || {};
+const features = window.treekViewFeatures || {};
 
-if (features.attachmentsToggle !== false) {
+if (features.attachments_toggle) {
     initAllAttachments();
 }
 ```
@@ -426,7 +430,7 @@ tree_popover_live_polling
 2. Подробно описать `treek_view.js`.
 3. Переименовать `treek_view.js` в более точное имя, если решим, что он остаётся.
 4. Ввести read-only карту template-фич в JS без изменения UI.
-5. Добавить первый реальный флаг, вероятно `attachments_toggle`.
+5. Добавить первый реальный флаг `attachments_toggle`.
 6. Потом отдельно разбирать subject suffix и формы ответа.
 
 ## Предварительная классификация

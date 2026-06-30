@@ -8,6 +8,10 @@
 
     var SESSION_KEY = 'kunena_attach_open';
 
+    function isFeatureEnabled(name) {
+        return !!(window.treekViewFeatures && window.treekViewFeatures[name]);
+    }
+
     /* ================================================================
        УТИЛИТА: подсчёт файлов в блоке вложений
        ================================================================
@@ -180,7 +184,10 @@ new MutationObserver(function () {
        ================================================================ */
 
     function init() {
-        initAllAttachments();
+        if (isFeatureEnabled('attachments_toggle')) {
+            initAllAttachments();
+        }
+
         initActionButtons();
     }
 
@@ -202,7 +209,7 @@ new MutationObserver(function () {
             });
         });
         if (needAction) initActionButtons();
-        if (needAttach) initAllAttachments();
+        if (needAttach && isFeatureEnabled('attachments_toggle')) initAllAttachments();
     });
 
     document.addEventListener('DOMContentLoaded', function () {

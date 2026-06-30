@@ -48,6 +48,15 @@ The script checks that:
   manifests.
 - A temporary `pkg_treek.zip` can be built from the current package directory.
 
+Build a temporary AJAX plugin ZIP from `src/plugin-ajax-treek`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build-plugin-ajax-treek.ps1
+```
+
+This writes to the Windows temp folder by default and does not replace the
+working nested package ZIP.
+
 ## Candidate target layout
 
 ```text

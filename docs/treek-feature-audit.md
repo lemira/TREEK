@@ -28,6 +28,59 @@ src/plugin-ajax-treek/media/js/treek.js
 Поэтому название `treek_view.js` вводит в заблуждение. При следующем рефакторинге
 его лучше переименовать по смыслу, например в `kunena_ui_tweaks.js`.
 
+## Модель будущих TreeKView-флагов
+
+TreeKView-флаги должны быть пользовательскими настройками, а не только
+глобальными настройками сайта. Один пользователь может включить суффиксы и
+inline-кнопки, другой может оставить формы ближе к штатной Kunena.
+
+Глобальное поведение администратора можно получить тем же механизмом: админ
+назначает всем пользователям одинаковые значения флагов.
+
+Текущая таблица:
+
+```text
+#__treek_user_parameters
+```
+
+уже содержит `user_id`, `context` и JSON-поле `settings`. Этого достаточно для
+первого этапа. Чтобы не смешивать настройки popover и настройки вмешательства в
+Kunena/template, будущие значения лучше хранить либо в отдельном разделе JSON,
+либо в отдельном `context`.
+
+Предпочтительный вариант для сопровождения:
+
+```text
+context = tree
+context = treek_view
+```
+
+Так таблица остаётся одной, но смысл настроек не смешивается.
+
+Если флаги называются положительно, например:
+
+```text
+subject_suffix
+attachments_toggle
+inline_action_buttons
+```
+
+то естественная семантика значения:
+
+```text
+0 = выключено
+1 = включено
+```
+
+Если понадобится сохранить обратную семантику `1 = выключено`, параметры лучше
+называть отрицательно:
+
+```text
+disable_subject_suffix
+disable_attachments_toggle
+disable_inline_action_buttons
+```
+
 ## Важное различие subject
 
 В TreeK есть два разных subject, и их нельзя смешивать:
@@ -196,6 +249,10 @@ subject_suffix_max_depth
 Если отключать группу, PHP должен выводить обычное subject-поле Kunena, а
 `treek_subject.js` не должен подключаться.
 
+Эта группа считается самостоятельной опцией TreeKView. Она действительно меняет
+форму, но меняет её как единый независимый функциональный кусок: суффикс,
+стрелки, кнопку отмены, атрибуты subject-поля и JS-защиту суффикса.
+
 ### Формы ответа и штатный вид Kunena
 
 Файлы:
@@ -219,11 +276,13 @@ src/kunena-template/treek/layouts/topic/edit/default.php
 Будущий условный флаг:
 
 ```text
-native_kunena_reply_form
+reply_form_treek_look
 ```
 
-Смысл флага: дать администратору режим, в котором формы выглядят максимально
-как штатные формы Kunena, но TreeK-семантика subject остаётся правильной.
+Смысл флага: дать пользователю режим, в котором формы ответа и quick reply
+получают TreeK-оформление верхней части формы. Если флаг выключен, форма должна
+выглядеть максимально как штатная Kunena, но TreeK-семантика subject остаётся
+правильной.
 
 В этом режиме должны сохраняться:
 
@@ -247,7 +306,7 @@ reply_form_visual_cleanup
 ```
 
 `quickreply.php`, `full.php` и `topic/edit/default.php` относятся сразу к двум
-группам: `subject_suffix` и `native_kunena_reply_form`. Это первый кандидат на
+группам: `subject_suffix` и `reply_form_treek_look`. Это первый кандидат на
 будущее обособление общей subject/suffix-логики.
 
 ### Attachments UI
@@ -319,7 +378,8 @@ if ($this->treekFeature('subject_suffix')) {
 ```
 
 Такого helper пока нет. Перед внедрением нужно решить, где хранить настройки:
-в параметрах шаблона, параметрах плагина или в отдельной TreeK-конфигурации.
+в текущей пользовательской таблице под отдельным `context` или в отдельном
+разделе JSON.
 
 ### JS уровень
 
@@ -378,6 +438,6 @@ tree_popover_live_polling
 | Стабильный topic subject и собственный reply subject | ядро | Kunena overrides | `stable_topic_subject` |
 | Переход к родителю | опциональная навигация | template layout + plugin JS | `parent_post_navigation` |
 | Subject suffix | опционально | template layouts + `treek_subject.js` | `subject_suffix` |
-| Штатный вид reply-форм при TreeK-семантике subject | смешанная группа | template layouts | `native_kunena_reply_form` |
+| TreeK-оформление reply-форм при TreeK-семантике subject | опционально | template layouts | `reply_form_treek_look` |
 | Attachments collapse/count | опционально | `treek_view.js` | `attachments_toggle` |
 | Inline action buttons | опционально | `treek_view.js` | `inline_action_buttons` |

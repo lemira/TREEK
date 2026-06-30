@@ -25,10 +25,28 @@ The installer depends on these paths:
 
 1. Document the existing package layout.
 2. Add source-oriented directories without changing installer paths.
-3. Move one resource group at a time.
-4. Update `treek_install_script.php` path constants for that group.
-5. Verify package installation behavior.
-6. Introduce a build step only after the manual layout is understood.
+3. Add local package structure verification.
+4. Move one resource group at a time.
+5. Update `treek_install_script.php` path constants for that group.
+6. Verify package installation behavior.
+7. Introduce a build step only after the manual layout is understood.
+
+## Local verification
+
+Run this from the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/verify-package.ps1
+```
+
+The script checks that:
+
+- `pkg_treek/pkg_treek.xml` is a package manifest.
+- The installer script and package language files referenced by the manifest
+  exist.
+- Nested ZIP packages referenced by the manifest exist and contain their XML
+  manifests.
+- A temporary `pkg_treek.zip` can be built from the current package directory.
 
 ## Candidate target layout
 
@@ -51,4 +69,3 @@ pkg_treek/
 The exact target can still change. The important rule is that `pkg_treek` should
 not be partially moved unless the manifest, install script, and package ZIP are
 updated together.
-

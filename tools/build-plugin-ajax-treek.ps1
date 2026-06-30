@@ -86,6 +86,7 @@ function Assert-ZipHasEntry {
         [string] $EntryName
     )
 
+    Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
 
     $archive = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
@@ -95,6 +96,81 @@ function Assert-ZipHasEntry {
         }
     } finally {
         $archive.Dispose()
+    }
+}
+
+function Add-ZipDirectoryEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchive] $Archive,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EntryName
+    )
+
+    $normalizedName = $EntryName.TrimEnd('/') + '/'
+    $Archive.CreateEntry($normalizedName) | Out-Null
+}
+
+function Add-ZipFileEntry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchive] $Archive,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SourceFile,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EntryName
+    )
+
+    $normalizedName = $EntryName -replace '\\', '/'
+    [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($Archive, $SourceFile, $normalizedName) | Out-Null
+}
+
+function Get-RelativeZipPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Root,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Path
+    )
+
+    $rootFullPath = [System.IO.Path]::GetFullPath($Root).TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+    $pathFullPath = [System.IO.Path]::GetFullPath($Path)
+
+    if (-not $pathFullPath.StartsWith($rootFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Path is not inside root: $Path"
+    }
+
+    return $pathFullPath.Substring($rootFullPath.Length) -replace '\\', '/'
+}
+
+function Add-ZipDirectoryTree {
+    param(
+        [Parameter(Mandatory = $true)]
+        [System.IO.Compression.ZipArchive] $Archive,
+
+        [Parameter(Mandatory = $true)]
+        [string] $SourceDir,
+
+        [Parameter(Mandatory = $true)]
+        [string] $EntryRoot
+    )
+
+    Add-ZipDirectoryEntry -Archive $Archive -EntryName $EntryRoot
+
+    $directories = Get-ChildItem -LiteralPath $SourceDir -Directory -Recurse | Sort-Object FullName
+    foreach ($directory in $directories) {
+        $relative = Get-RelativeZipPath -Root $SourceDir -Path $directory.FullName
+        Add-ZipDirectoryEntry -Archive $Archive -EntryName ($EntryRoot.TrimEnd('/') + '/' + $relative)
+    }
+
+    $files = Get-ChildItem -LiteralPath $SourceDir -File -Recurse | Sort-Object FullName
+    foreach ($file in $files) {
+        $relative = Get-RelativeZipPath -Root $SourceDir -Path $file.FullName
+        Add-ZipFileEntry -Archive $Archive -SourceFile $file.FullName -EntryName ($EntryRoot.TrimEnd('/') + '/' + $relative)
     }
 }
 
@@ -128,7 +204,20 @@ if (Test-Path -LiteralPath $outputFullPath) {
     Remove-Item -LiteralPath $outputFullPath -Force
 }
 
-Compress-Archive -Path (Join-Path $sourceRoot '*') -DestinationPath $outputFullPath -Force
+Add-Type -AssemblyName System.IO.Compression
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$archive = [System.IO.Compression.ZipFile]::Open($outputFullPath, [System.IO.Compression.ZipArchiveMode]::Create)
+try {
+    Add-ZipFileEntry -Archive $archive -SourceFile (Join-Path $sourceRoot 'treek.xml') -EntryName 'treek.xml'
+    Add-ZipFileEntry -Archive $archive -SourceFile (Join-Path $sourceRoot 'treek.php') -EntryName 'treek.php'
+
+    Add-ZipDirectoryTree -Archive $archive -SourceDir (Join-Path $sourceRoot 'language') -EntryRoot 'language'
+    Add-ZipDirectoryTree -Archive $archive -SourceDir (Join-Path $sourceRoot 'media') -EntryRoot 'media'
+    Add-ZipDirectoryTree -Archive $archive -SourceDir (Join-Path $sourceRoot 'src') -EntryRoot 'src'
+} finally {
+    $archive.Dispose()
+}
 
 Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'treek.xml'
 Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'treek.php'

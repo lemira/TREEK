@@ -178,3 +178,9 @@ components/com_kunena/template/treek/assets/js/treek_subject.js
 Особенно важно отдельно описать `assets/js/treek_view.js`, потому что он связан
 с вопросом, можно ли исключить TreeK-view из шаблона или заменить его другой
 реализацией.
+
+См. также общий аудит обязательных и опциональных групп TreeK:
+
+```text
+docs/treek-feature-audit.md
+```

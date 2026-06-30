@@ -12,14 +12,17 @@ introduced.
 src/
   package/
   plugin-ajax-treek/
+  file-treek-kunena/
   kunena-template/
   kunena-overrides/
 ```
 
 - `package/` is reserved for package-level source files: manifest, installer
   script, package language files, and future packaging/build notes.
-- `plugin-ajax-treek/` is reserved for the TreeK AJAX plugin source that is
-  currently present only as `pkg_treek/packages/plg_ajax_treek.zip`.
+- `plugin-ajax-treek/` contains source extracted from
+  `pkg_treek/packages/plg_ajax_treek.zip`.
+- `file-treek-kunena/` contains source extracted from
+  `pkg_treek/packages/file_treek_kunena.zip`.
 - `kunena-template/` is reserved for the TreeK Kunena template source that is
   currently installed from `pkg_treek/treek_resources/kunena_template/treek`.
 - `kunena-overrides/` is reserved for patched Kunena files and Kunena language
@@ -30,4 +33,3 @@ src/
 
 Do not move working installer inputs into `src` until the corresponding package
 manifest, installer script, and build/package process are updated together.
-

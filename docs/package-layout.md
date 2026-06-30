@@ -57,6 +57,15 @@ powershell -ExecutionPolicy Bypass -File tools/build-plugin-ajax-treek.ps1
 This writes to the Windows temp folder by default and does not replace the
 working nested package ZIP.
 
+Compare two ZIP files by entry names and file contents:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/compare-zip.ps1 -ReferenceZip pkg_treek/packages/plg_ajax_treek.zip -CandidateZip $env:LOCALAPPDATA\Temp\plg_ajax_treek.zip
+```
+
+This is meant for build verification. It ignores ZIP container metadata such as
+timestamps, compression level, and entry order.
+
 ## Candidate target layout
 
 ```text

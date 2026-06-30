@@ -66,6 +66,12 @@ powershell -ExecutionPolicy Bypass -File tools/compare-zip.ps1 -ReferenceZip pkg
 This is meant for build verification. It ignores ZIP container metadata such as
 timestamps, compression level, and entry order.
 
+Build a temporary Kunena file package ZIP from `src/file-treek-kunena`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools/build-file-treek-kunena.ps1
+```
+
 ## Candidate target layout
 
 ```text

@@ -79,20 +79,21 @@ if ($this->config->orderingSystem == 'mesid') {
         <div class="kmessage">
             <div class="mykmsg-header">
                 <?php
-                // TreeK patch v1.0: replace "Replied by X on topic Y" with "⇑ [subject]"
-                if ($isReply) {
-                    // TreeK patch v1.0: get parent post URL with correct page number
-$arrow = '<a href="#" class="treek-parent-link" data-post-id="' . (int) $message->id . '" data-topic-id="' . (int) $this->topic->id . '" data-token="' . Session::getFormToken() . '" data-bs-toggle="tooltip" '
-    . 'title="' . Text::_('COM_KUNENA_TREEK_GOTO_PARENT') . '">'
-    . Text::_('COM_KUNENA_TREEK_ARROW_UP') . '</a>';
+                if ($isReply && $this->ktemplate->treekFeature('parent_post_navigation')) {
+                    $arrow = '<a href="#" class="treek-parent-link" data-post-id="' . (int) $message->id . '" data-topic-id="' . (int) $this->topic->id . '" data-token="' . Session::getFormToken() . '" data-bs-toggle="tooltip" '
+                        . 'title="' . Text::_('COM_KUNENA_TREEK_GOTO_PARENT') . '">'
+                        . Text::_('COM_KUNENA_TREEK_ARROW_UP') . '</a>';
 
                     $subject = $message->subject
                         ? $this->escape($message->subject)
                         : '<em>' . Text::_('COM_KUNENA_RE_TREEK') . ' '
-                          . $this->escape($this->topic->subject) . '</em>';
+                            . $this->escape($this->topic->subject) . '</em>';
+
                     echo $arrow . ' ' . $subject;
                 } else {
-                    echo Text::sprintf('COM_KUNENA_MESSAGE_CREATED_NEW',
+                    $langstr = $isReply ? 'COM_KUNENA_MESSAGE_REPLIED_NEW' : 'COM_KUNENA_MESSAGE_CREATED_NEW';
+
+                    echo Text::sprintf($langstr,
                         $message->getAuthor()->getLink(),
                         $this->getTopicLink($this->message->getTopic(), $this->message,
                             $this->message->displayField('subject'), null,

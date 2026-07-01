@@ -30,6 +30,8 @@ use Kunena\Forum\Libraries\User\KunenaUserHelper;
 HTMLHelper::_('behavior.formvalidator');
 HTMLHelper::_('behavior.keepalive');
 
+$subjectSuffixEnabled = $this->ktemplate->treekFeature('subject_suffix');
+
 // Add assets
 $this->wa->registerAndUseStyle('fileupload', 'media/kunena/core/css/fileupload.css')
     ->registerAndUseScript('jquery.ui.widget', 'media/kunena/core/js/jquery.ui.widget.js')
@@ -43,8 +45,11 @@ $this->wa->registerAndUseStyle('fileupload', 'media/kunena/core/css/fileupload.c
     ->registerAndUseScript('jquery.fileupload-video', 'media/kunena/core/js/jquery.fileupload-video.js')
     ->registerAndUseScript('jquery.fileupload-validate', 'media/kunena/core/js/jquery.fileupload-validate.js')
     ->registerAndUseScript('upload.main', 'media/kunena/core/js/upload.main.js')
-    ->registerAndUseScript('edit', 'components/com_kunena/template/treek/assets/js/edit.js')
-    ->registerAndUseScript('treek_subject', 'components/com_kunena/template/treek/assets/js/treek_subject.js');
+    ->registerAndUseScript('edit', 'components/com_kunena/template/treek/assets/js/edit.js');
+
+if ($subjectSuffixEnabled) {
+    $this->wa->registerAndUseScript('treek_subject', 'components/com_kunena/template/treek/assets/js/treek_subject.js');
+}
 
 // If polls are enabled, load also poll JavaScript.
 if ($this->config->pollEnabled) {
@@ -292,15 +297,14 @@ Text::script('COM_KUNENA_POLL_TITLE');
         <?php endif; ?>
 
         <?php
-        // TreeK patch v1.0: for replies, subject field uses protected suffix with parent subject.
-        // For new topics and edits, standard behaviour is preserved.
         $isReplyForm = $this->message->parent > 0 && !$this->message->exists();
+        $useSubjectSuffix = $isReplyForm && $subjectSuffixEnabled;
         ?>
 
         <div class="form-group row">
             <label for="subject" class="col-sm-2 col-form-label">
                 <?php echo Text::_('COM_KUNENA_GEN_SUBJECT'); ?>
-                <?php if ($isReplyForm) : ?>
+                <?php if ($useSubjectSuffix) : ?>
                     <a href="#"
                        data-treek-cancel-for="subject"
                        data-treek-icon-cancel="<?php echo Text::_('COM_KUNENA_TREEK_ARROW_CANCEL'); ?>"
@@ -317,7 +321,7 @@ Text::script('COM_KUNENA_POLL_TITLE');
                 <?php endif; ?>
             </label>
             <div class="col-md-10">
-                <?php if ($isReplyForm) :
+                <?php if ($useSubjectSuffix) :
                     $parentMessage = KunenaMessageHelper::get($this->message->parent);
                     $arrowRight    = Text::_('COM_KUNENA_TREEK_ARROW_RIGHT');
                     $parentSubject = $parentMessage->subject;
@@ -333,6 +337,12 @@ Text::script('COM_KUNENA_POLL_TITLE');
                         data-treek-suffix="<?php echo $treek_suffix; ?>"
                         autocomplete="off"
                         tabindex="6" value="" />
+                <?php elseif ($isReplyForm) : ?>
+                    <input class="form-control" type="text"
+                        placeholder="<?php echo Text::_('COM_KUNENA_TOPIC_EDIT_PLACEHOLDER_SUBJECT') ?>"
+                        name="subject" id="subject"
+                        maxlength="<?php echo $this->escape($this->ktemplate->params->get('SubjectLengthMessage')); ?>"
+                        tabindex="6" value="<?php echo !empty($this->message->subject) ? $this->escape($this->message->subject) : ''; ?>" />
                 <?php else : ?>
                     <input class="form-control" type="text"
                         placeholder="<?php echo Text::_('COM_KUNENA_TOPIC_EDIT_PLACEHOLDER_SUBJECT') ?>"

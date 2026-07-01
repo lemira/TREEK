@@ -27,6 +27,7 @@ use Kunena\Forum\Libraries\User\KunenaUserHelper;
 
 $message  = $this->message;
 $template = KunenaTemplate::getInstance();
+$subjectSuffixEnabled = $template->treekFeature('subject_suffix');
 
 if (!$message->isAuthorised('reply')) {
     return;
@@ -42,7 +43,10 @@ $this->addScriptOptions('com_kunena.kunena_topicicontype', '');
 $this->addScriptOptions('com_kunena.kunena_quickreplymesid', $message->displayField('id'));
 
 $this->addScript('assets/js/edit.js');
-$this->addScript('assets/js/treek_subject.js');
+
+if ($subjectSuffixEnabled) {
+    $this->addScript('assets/js/treek_subject.js');
+}
 
 if (KunenaFactory::getTemplate()->params->get('formRecover')) {
     $this->addScript('sisyphus.js');
@@ -55,14 +59,16 @@ if ($me->canDoCaptcha() && KunenaConfig::getInstance()->quickReply) {
     $this->captchaEnabled = true;
 }
 
-// TreeK patch v1.0: suffix = ⇒ + parent subject, max 2 arrows
-$arrowRight    = Text::_('COM_KUNENA_TREEK_ARROW_RIGHT');
-$parentSubject = $message->subject;
-$doubleArrow   = $arrowRight . ' ' . $arrowRight;
-if (mb_strpos($parentSubject, $doubleArrow) === 0) {
-    $treek_suffix = ' ' . $this->escape($parentSubject);
-} else {
-    $treek_suffix = ' ' . $arrowRight . ' ' . $this->escape($parentSubject);
+if ($subjectSuffixEnabled) {
+    $arrowRight    = Text::_('COM_KUNENA_TREEK_ARROW_RIGHT');
+    $parentSubject = $message->subject;
+    $doubleArrow   = $arrowRight . ' ' . $arrowRight;
+
+    if (mb_strpos($parentSubject, $doubleArrow) === 0) {
+        $treek_suffix = ' ' . $this->escape($parentSubject);
+    } else {
+        $treek_suffix = ' ' . $arrowRight . ' ' . $this->escape($parentSubject);
+    }
 }
 ?>
 
@@ -106,6 +112,7 @@ if (mb_strpos($parentSubject, $doubleArrow) === 0) {
             <div class="form-group">
                 <label for="subject">
                     <?php echo Text::_('COM_KUNENA_GEN_SUBJECT'); ?>:
+                    <?php if ($subjectSuffixEnabled) : ?>
                     <a href="#"
                        data-treek-cancel-for="subject"
                        data-treek-icon-cancel="<?php echo Text::_('COM_KUNENA_TREEK_ARROW_CANCEL'); ?>"
@@ -119,13 +126,18 @@ if (mb_strpos($parentSubject, $doubleArrow) === 0) {
                        style="text-decoration:none; margin-left:6px;">
                         <?php echo Text::_('COM_KUNENA_TREEK_ARROW_CANCEL'); ?>
                     </a>
+                    <?php endif; ?>
                 </label>
                 <input type="text" id="subject" name="subject"
-                    class="form-control treek-subject-field"
+                    class="form-control<?php echo $subjectSuffixEnabled ? ' treek-subject-field' : ''; ?>"
                     maxlength="<?php echo $template->params->get('SubjectLengthMessage'); ?>"
-                    data-treek-suffix="<?php echo $treek_suffix; ?>"
-                    autocomplete="off"
-                    value="" />
+                    <?php if ($subjectSuffixEnabled) : ?>
+                        data-treek-suffix="<?php echo $treek_suffix; ?>"
+                        autocomplete="off"
+                        value=""
+                    <?php else : ?>
+                        value="<?php echo $message->displayField('subject'); ?>"
+                    <?php endif; ?> />
             </div>
 
             <div class="form-group">

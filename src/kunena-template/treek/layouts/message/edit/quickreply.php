@@ -35,17 +35,21 @@ $topic    = isset($this->topic) ? $this->topic : $message->getTopic();
 $category = isset($this->category) ? $this->category : $message->getCategory();
 $config   = isset($this->config) ? $this->config : KunenaFactory::getConfig();
 $me       = isset($this->me) ? $this->me : KunenaUserHelper::getMyself();
+$template = KunenaTemplate::getInstance();
+$subjectSuffixEnabled = $template->treekFeature('subject_suffix');
 
 $this->addScriptOptions('com_kunena.kunena_topicicontype', '');
 
 $this->addScript('assets/js/quickreply.js');
-$this->addScript('assets/js/treek_subject.js');
+
+if ($subjectSuffixEnabled) {
+    $this->addScript('assets/js/treek_subject.js');
+}
 
 if (KunenaFactory::getTemplate()->params->get('formRecover')) {
     $this->addScript('sisyphus.js');
 }
 
-$template = KunenaTemplate::getInstance();
 $quick    = $template->params->get('quick');
 $editor   = $template->params->get('editor');
 
@@ -54,28 +58,31 @@ if ($me->canDoCaptcha() && KunenaConfig::getInstance()->quickReply) {
     $this->captchaEnabled = true;
 }
 
-// TreeK patch v1.0: suffix = ⇒ + parent subject, max 2 arrows
-$arrowRight    = Text::_('COM_KUNENA_TREEK_ARROW_RIGHT');
-$parentSubject = $message->subject;
-$doubleArrow   = $arrowRight . ' ' . $arrowRight;
-if (mb_strpos($parentSubject, $doubleArrow) === 0) {
-    $treek_suffix = ' ' . $this->escape($parentSubject);
-} else {
-    $treek_suffix = ' ' . $arrowRight . ' ' . $this->escape($parentSubject);
-}
 $subject_id = 'subject' . \intval($message->id);
 
-// Cancel button data attributes — shared for both quick modes
-$treek_btn_attrs = '
-    data-treek-icon-cancel="' . Text::_('COM_KUNENA_TREEK_ARROW_CANCEL') . '"
-    data-treek-icon-one="'    . Text::_('COM_KUNENA_TREEK_ARROW_CANCEL_ONE') . '"
-    data-treek-icon-off="'    . Text::_('COM_KUNENA_TREEK_ARROW_SUFFIX_OFF') . '"
-    data-treek-tip-cancel="'  . Text::_('COM_KUNENA_TREEK_CANCEL_SUFFIX_TOOLTIP') . '"
-    data-treek-tip-one="'     . Text::_('COM_KUNENA_TREEK_CANCEL_ONE_TOOLTIP') . '"
-    data-treek-tip-off="'     . Text::_('COM_KUNENA_TREEK_SUFFIX_OFF_TOOLTIP') . '"
-    data-bs-toggle="tooltip"
-    title="'                  . Text::_('COM_KUNENA_TREEK_CANCEL_SUFFIX_TOOLTIP') . '"';
-$treek_btn_icon = Text::_('COM_KUNENA_TREEK_ARROW_CANCEL');
+if ($subjectSuffixEnabled) {
+    $arrowRight    = Text::_('COM_KUNENA_TREEK_ARROW_RIGHT');
+    $parentSubject = $message->subject;
+    $doubleArrow   = $arrowRight . ' ' . $arrowRight;
+
+    if (mb_strpos($parentSubject, $doubleArrow) === 0) {
+        $treek_suffix = ' ' . $this->escape($parentSubject);
+    } else {
+        $treek_suffix = ' ' . $arrowRight . ' ' . $this->escape($parentSubject);
+    }
+
+    // Cancel button data attributes, shared for both quick modes.
+    $treek_btn_attrs = '
+        data-treek-icon-cancel="' . Text::_('COM_KUNENA_TREEK_ARROW_CANCEL') . '"
+        data-treek-icon-one="'    . Text::_('COM_KUNENA_TREEK_ARROW_CANCEL_ONE') . '"
+        data-treek-icon-off="'    . Text::_('COM_KUNENA_TREEK_ARROW_SUFFIX_OFF') . '"
+        data-treek-tip-cancel="'  . Text::_('COM_KUNENA_TREEK_CANCEL_SUFFIX_TOOLTIP') . '"
+        data-treek-tip-one="'     . Text::_('COM_KUNENA_TREEK_CANCEL_ONE_TOOLTIP') . '"
+        data-treek-tip-off="'     . Text::_('COM_KUNENA_TREEK_SUFFIX_OFF_TOOLTIP') . '"
+        data-bs-toggle="tooltip"
+        title="'                  . Text::_('COM_KUNENA_TREEK_CANCEL_SUFFIX_TOOLTIP') . '"';
+    $treek_btn_icon = Text::_('COM_KUNENA_TREEK_ARROW_CANCEL');
+}
 ?>
 
 <?php if ($quick == 1) : ?>
@@ -121,19 +128,25 @@ $treek_btn_icon = Text::_('COM_KUNENA_TREEK_ARROW_CANCEL');
                         <div class="form-group">
                             <label class="col-md-12 control-label" style="padding:0;">
                                 <?php echo Text::_('COM_KUNENA_GEN_SUBJECT'); ?>:
+                                <?php if ($subjectSuffixEnabled) : ?>
                                 <a href="#"
                                    data-treek-cancel-for="<?php echo $subject_id; ?>"
                                    <?php echo $treek_btn_attrs; ?>
                                    style="text-decoration:none; margin-left:6px;">
                                     <?php echo $treek_btn_icon; ?>
                                 </a>
+                                <?php endif; ?>
                             </label>
                             <input type="text" id="<?php echo $subject_id; ?>" name="subject"
-                                class="form-control treek-subject-field"
+                                class="form-control<?php echo $subjectSuffixEnabled ? ' treek-subject-field' : ''; ?>"
                                 maxlength="<?php echo $template->params->get('SubjectLengthMessage'); ?>"
-                                data-treek-suffix="<?php echo $treek_suffix; ?>"
-                                autocomplete="off"
-                                value="" />
+                                <?php if ($subjectSuffixEnabled) : ?>
+                                    data-treek-suffix="<?php echo $treek_suffix; ?>"
+                                    autocomplete="off"
+                                    value=""
+                                <?php else : ?>
+                                    value="<?php echo $message->displayField('subject'); ?>"
+                                <?php endif; ?> />
                         </div>
 
                         <div class="form-group">
@@ -234,19 +247,25 @@ $treek_btn_icon = Text::_('COM_KUNENA_TREEK_ARROW_CANCEL');
                             <div class="form-group">
                                 <label class="col-md-12 control-label" style="padding:0;">
                                     <?php echo Text::_('COM_KUNENA_GEN_SUBJECT'); ?>:
+                                    <?php if ($subjectSuffixEnabled) : ?>
                                     <a href="#"
                                        data-treek-cancel-for="<?php echo $subject_id; ?>"
                                        <?php echo $treek_btn_attrs; ?>
                                        style="text-decoration:none; margin-left:6px;">
                                         <?php echo $treek_btn_icon; ?>
                                     </a>
+                                    <?php endif; ?>
                                 </label>
                                 <input type="text" id="<?php echo $subject_id; ?>" name="subject"
-                                    class="form-control treek-subject-field"
+                                    class="form-control<?php echo $subjectSuffixEnabled ? ' treek-subject-field' : ''; ?>"
                                     maxlength="<?php echo $template->params->get('SubjectLengthMessage'); ?>"
-                                    data-treek-suffix="<?php echo $treek_suffix; ?>"
-                                    autocomplete="off"
-                                    value="" />
+                                    <?php if ($subjectSuffixEnabled) : ?>
+                                        data-treek-suffix="<?php echo $treek_suffix; ?>"
+                                        autocomplete="off"
+                                        value=""
+                                    <?php else : ?>
+                                        value="<?php echo $message->displayField('subject'); ?>"
+                                    <?php endif; ?> />
                             </div>
 
                             <div class="form-group">

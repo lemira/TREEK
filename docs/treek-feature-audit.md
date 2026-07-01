@@ -242,6 +242,15 @@ src/kunena-template/treek/assets/js/treek_subject.js
 subject_suffix
 ```
 
+Статус: подключён как runtime-флаг TreeKView. Если флаг включён, reply subject
+получает защищённый суффикс, кнопку управления суффиксом, `data-treek-suffix`,
+`autocomplete="off"` и подключение `treek_subject.js`. Если флаг выключен,
+subject-поле остаётся обычным editable-полем для message subject, без
+суффиксной кнопки, без суффиксных data-атрибутов и без `treek_subject.js`.
+
+Обязательная TreeK-семантика при этом сохраняется: скрытый Kunena `subject`,
+который мог приводить к перезаписи topic subject из reply, не возвращается.
+
 Возможная детализация:
 
 ```text

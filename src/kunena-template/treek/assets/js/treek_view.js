@@ -188,7 +188,9 @@ new MutationObserver(function () {
             initAllAttachments();
         }
 
-        initActionButtons();
+        if (isFeatureEnabled('inline_action_buttons')) {
+            initActionButtons();
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -208,7 +210,7 @@ new MutationObserver(function () {
                 if (node.tagName === 'H2' || (node.querySelector && node.querySelector('h2'))) needAttach = true;
             });
         });
-        if (needAction) initActionButtons();
+        if (needAction && isFeatureEnabled('inline_action_buttons')) initActionButtons();
         if (needAttach && isFeatureEnabled('attachments_toggle')) initAllAttachments();
     });
 

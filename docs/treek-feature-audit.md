@@ -360,7 +360,10 @@ src/kunena-template/treek/assets/js/treek_view.js
 inline_action_buttons
 ```
 
-Рекомендация: сделать полностью опциональным.
+Статус: подключён как runtime-флаг TreeKView. Если
+`window.treekViewFeatures.inline_action_buttons` выключен или отсутствует,
+dropdown `Action` остаётся штатным Kunena. Если флаг включён, Reply / Quote /
+Edit дополнительно выводятся как inline-кнопки.
 
 ## Где ставить будущие условия
 

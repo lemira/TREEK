@@ -166,9 +166,7 @@ public function uninstall($parent)
         return false;
     }
 
-if (!$this->dropUserParametersTable()) {
-    return false;
-}
+    $this->keepUserParametersTable();
 
     $this->cleanupBackups();
 
@@ -504,26 +502,10 @@ return true;
     }
 }
 
-protected function dropUserParametersTable(): bool
+protected function keepUserParametersTable(): void
 {
-    $db = Factory::getDbo();
-
-    try {
-        $query = 'DROP TABLE IF EXISTS ' . $db->quoteName('#__treek_user_parameters');
-        $db->setQuery($query);
-        $db->execute();
-Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_DROPPED'), 'notice');
-
-        $this->log('Таблица пользовательских параметров TreeK удалена');
-
-        return true;
-    } catch (\Throwable $e) {
-        $msg = 'Error dropping TreeK user parameters table: ' . $e->getMessage();
-        Factory::getApplication()->enqueueMessage($msg, 'error');
-        $this->log($msg, Log::ERROR);
-
-        return false;
-    }
+    Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_KEPT'), 'notice');
+    $this->log('Таблица пользовательских параметров TreeK сохранена');
 }
 
 }

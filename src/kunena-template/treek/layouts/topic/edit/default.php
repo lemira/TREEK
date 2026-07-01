@@ -197,9 +197,15 @@ Text::script('COM_KUNENA_POLL_TITLE');
     </div>
 </div>
 
-<h5>
-    <?php echo $this->headerText; // TreeK patch v1.0 ?>
-</h5>
+<?php if ($this->ktemplate->treekFeature('reply_form_treek_look')) : ?>
+    <h5>
+        <?php echo $this->headerText; ?>
+    </h5>
+<?php else : ?>
+    <h1>
+        <?php echo $this->escape($this->headerTextPlain ?? strip_tags((string) $this->headerText)); ?>
+    </h1>
+<?php endif; ?>
 
 <form action="<?php echo KunenaRoute::_('index.php?option=com_kunena') ?>" method="post" class="form-validate" role="form" id="postform" name="postform" enctype="multipart/form-data" data-page-identifier="1">
     <input type="hidden" name="view" value="topic" />

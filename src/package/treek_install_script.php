@@ -134,6 +134,10 @@ public function preflight($type, $parent)
 if (!$this->createUserParametersTable()) {
     return false;
 }
+
+if (!$this->createGlobalParametersTable()) {
+    return false;
+}
         
         $this->log('Установка TreeK завершена успешно');
         
@@ -506,6 +510,78 @@ protected function keepUserParametersTable(): void
 {
     Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_KEPT'), 'notice');
     $this->log('Таблица пользовательских параметров TreeK сохранена');
+}
+
+protected function createGlobalParametersTable(): bool
+{
+    $db = Factory::getDbo();
+
+    $query = "
+        CREATE TABLE IF NOT EXISTS " . $db->quoteName('#__treek_global_parameters') . " (
+            " . $db->quoteName('name') . " varchar(128) NOT NULL,
+            " . $db->quoteName('value') . " mediumtext NOT NULL,
+            " . $db->quoteName('created_at') . " datetime NOT NULL,
+            " . $db->quoteName('updated_at') . " datetime NOT NULL,
+            PRIMARY KEY (" . $db->quoteName('name') . ")
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+    ";
+
+    try {
+        $db->setQuery($query);
+        $db->execute();
+
+        $tableName = $db->replacePrefix('#__treek_global_parameters');
+        $db->setQuery('SHOW TABLES LIKE ' . $db->quote($tableName));
+
+        if ((string) $db->loadResult() !== $tableName) {
+            throw new \RuntimeException('TreeK global parameters table was not found after CREATE TABLE: ' . $tableName);
+        }
+
+        $this->seedGlobalParameters();
+
+        Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_GLOBAL_PARAMS_TABLE_CREATED'), 'notice');
+        $this->log('Таблица глобальных параметров TreeK создана или уже существует: ' . $tableName);
+
+        return true;
+    } catch (\Throwable $e) {
+        $msg = 'Error creating TreeK global parameters table: ' . $e->getMessage();
+        Factory::getApplication()->enqueueMessage($msg, 'error');
+        $this->log($msg, Log::ERROR);
+
+        return false;
+    }
+}
+
+protected function seedGlobalParameters(): void
+{
+    $db = Factory::getDbo();
+    $now = Factory::getDate()->toSql();
+
+    $defaults = [
+        'debug_ajax' => '0',
+        'parent_post_navigation' => '1',
+        'reply_form_treek_look' => '0',
+        'subject_suffix' => '0',
+        'attachments_toggle' => '0',
+        'inline_action_buttons' => '0',
+    ];
+
+    foreach ($defaults as $name => $value) {
+        $query = $db->getQuery(true)
+            ->insert($db->quoteName('#__treek_global_parameters'))
+            ->columns($db->quoteName(['name', 'value', 'created_at', 'updated_at']))
+            ->values(implode(',', [
+                $db->quote($name),
+                $db->quote($value),
+                $db->quote($now),
+                $db->quote($now),
+            ]));
+
+        $query .= ' ON DUPLICATE KEY UPDATE ' . $db->quoteName('name') . ' = ' . $db->quoteName('name');
+
+        $db->setQuery($query);
+        $db->execute();
+    }
 }
 
 }

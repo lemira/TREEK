@@ -506,13 +506,49 @@ class PlgAjaxTreek extends CMSPlugin
 
     private function getDefaultTreekViewFeatures(): array
     {
-        return [
-            'parent_post_navigation' => false,
+        $features = [
+            'parent_post_navigation' => true,
             'reply_form_treek_look' => false,
             'subject_suffix' => false,
             'attachments_toggle' => false,
             'inline_action_buttons' => false,
         ];
+
+        return $this->loadGlobalBooleanParameters($features);
+    }
+
+    private function loadGlobalBooleanParameters(array $defaults): array
+    {
+        try {
+            $db = Factory::getContainer()->get('DatabaseDriver');
+            $keys = array_keys($defaults);
+            $query = $db->getQuery(true)
+                ->select($db->quoteName(['name', 'value']))
+                ->from($db->quoteName('#__treek_global_parameters'))
+                ->where($db->quoteName('name') . ' IN (' . implode(',', array_map([$db, 'quote'], $keys)) . ')');
+
+            $db->setQuery($query);
+            $rows = (array) $db->loadAssocList('name');
+        } catch (\Throwable $e) {
+            return $defaults;
+        }
+
+        foreach ($defaults as $key => $default) {
+            if (isset($rows[$key])) {
+                $defaults[$key] = $this->toBoolean($rows[$key]['value'] ?? $default);
+            }
+        }
+
+        return $defaults;
+    }
+
+    private function toBoolean($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
     }
 
     private function getUserParametersContext(string $context): string
@@ -546,7 +582,7 @@ class PlgAjaxTreek extends CMSPlugin
 
     private function debugAjaxLog(string $event, array $context = []): void
     {
-        if ((int) $this->params->get('debug_ajax', 0) !== 1) {
+        if (!$this->isDebugAjaxEnabled()) {
             return;
         }
 
@@ -575,6 +611,15 @@ class PlgAjaxTreek extends CMSPlugin
             Log::INFO,
             'treek.ajax'
         );
+    }
+
+    private function isDebugAjaxEnabled(): bool
+    {
+        $defaults = [
+            'debug_ajax' => (bool) (int) $this->params->get('debug_ajax', 0),
+        ];
+
+        return $this->loadGlobalBooleanParameters($defaults)['debug_ajax'];
     }
 
     private function sendJson(array $data): void

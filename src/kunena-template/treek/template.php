@@ -227,7 +227,7 @@ EOF;
             return $this->treekViewFeatures;
         }
 
-        $features = $this->getDefaultTreekViewFeatures();
+        $features = $this->loadGlobalTreekViewFeatures();
         $userId = (int) Factory::getApplication()->getIdentity()->id;
 
         if ($userId <= 0) {
@@ -280,12 +280,48 @@ EOF;
     private function getDefaultTreekViewFeatures(): array
     {
         return [
-            'parent_post_navigation' => false,
+            'parent_post_navigation' => true,
             'reply_form_treek_look' => false,
             'subject_suffix' => false,
             'attachments_toggle' => false,
             'inline_action_buttons' => false,
         ];
+    }
+
+    private function loadGlobalTreekViewFeatures(): array
+    {
+        $features = $this->getDefaultTreekViewFeatures();
+
+        try {
+            $db = Factory::getContainer()->get('DatabaseDriver');
+            $keys = array_keys($features);
+            $query = $db->getQuery(true)
+                ->select($db->quoteName(['name', 'value']))
+                ->from($db->quoteName('#__treek_global_parameters'))
+                ->where($db->quoteName('name') . ' IN (' . implode(',', array_map([$db, 'quote'], $keys)) . ')');
+
+            $db->setQuery($query);
+            $rows = (array) $db->loadAssocList('name');
+        } catch (\Throwable $e) {
+            return $features;
+        }
+
+        foreach ($features as $key => $default) {
+            if (isset($rows[$key])) {
+                $features[$key] = $this->toBoolean($rows[$key]['value'] ?? $default);
+            }
+        }
+
+        return $features;
+    }
+
+    private function toBoolean($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
     }
 
     // === Остальные методы getButton, getIcon, getImage — оставляем без изменений ===

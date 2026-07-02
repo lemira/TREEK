@@ -121,7 +121,9 @@ const saveState = () => sessionStorage.setItem('treek_settings', JSON.stringify(
         const body = currentPopover.querySelector('.treek-popover__body');
         let rows = [...cachedData.rows];
 
+        // TREEK-PRO-START: flat_view
         if (state.view === 'flat') rows.sort((a, b) => a.id - b.id);
+        // TREEK-PRO-END: flat_view
 
         const childrenByParent = {};
 
@@ -159,6 +161,7 @@ const rowClass = 'treek-row treek-row-link'
             const subject = `<span class="treek-row__subject">${escapeHtml(row.subject || '...')}</span>`;
             const tooltip = `<span class="treek-row__tooltip-symbol" data-treek-tooltip="${escapeAttr(tooltipText)}">${_('TREEK_POST_TOOLTIP_SYMBOL')}</span>`;
 
+            // TREEK-PRO-START: comfort_tools
             const parentTool = (state.showComfortTools && state.showNavTools && isTreeView && parseInt(row.parent, 10) > 0)
                 ? `<span class="treek-row__tool treek-row__tool--parent" data-post-id="${row.id}" title="${_('TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL_TITLE')}" aria-label="${_('TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL_TITLE')}">${_('TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL')}</span>`
                 : '';
@@ -179,6 +182,7 @@ const familyTool = (state.showComfortTools && state.showHighlightTools && hasChi
 const comfort = (parentTool || childTools || authorTool || familyTool)
                 ? `<span class="treek-row__comfort">${parentTool}${childTools}${authorTool}${familyTool}</span>`
                 : '';
+            // TREEK-PRO-END: comfort_tools
 
             const timeStr = state.showTime ? formatTreeTime(row) : '';
             const time = timeStr ? `<span class="treek-row__meta">${escapeHtml(timeStr)}</span>` : '';
@@ -197,6 +201,7 @@ if (state.primary === 'subject_only') {
             let teaserHtml = '';
 
             if (state.showTeaser) {
+                // TREEK-PRO-START: screen_teaser
                 if (state.teaserMode === 'screen' && row.teaserHtml) {
                     const teaserHeight = parseInt(state.teaserLen, 10) || 150;
 
@@ -208,7 +213,9 @@ if (state.primary === 'subject_only') {
                                 ${_('TREEK_LOADING')}
                             </div>
                         </div>`;
-                } else if (row.text) {
+                } else
+                // TREEK-PRO-END: screen_teaser
+                if (row.text) {
                     let textSnippet = row.text;
 
                     if (textSnippet.length > state.teaserLen) {
@@ -235,7 +242,9 @@ if (state.primary === 'subject_only') {
             : '<div class="treek-empty">' + _('TREEK_NO_DATA') + '</div>';
 
         initAuthorTooltips(body);
+        // TREEK-PRO-START: screen_teaser
         initLazyScreenTeasers(body);
+        // TREEK-PRO-END: screen_teaser
     }
 
     function escapeHtml(text) {
@@ -262,9 +271,11 @@ if (state.primary === 'subject_only') {
 function buildGridPrefix(level, indentSize) {
     if (state.view !== 'tree' || !state.showGrid || level <= 0) return '';
 
-    const symbol = state.gridMode === 'hard'
-        ? _('TREEK_TAB_CHARACTER_HARD_SYMBOL')
-        : _('TREEK_TAB_CHARACTER_LIGHT_SYMBOL');
+    let symbol = _('TREEK_TAB_CHARACTER_LIGHT_SYMBOL');
+
+    if (state.gridMode === 'hard') {
+        symbol = _('TREEK_TAB_CHARACTER_HARD_SYMBOL');
+    }
 
     const width = Math.max(1, parseInt(indentSize, 10) || 16);
     let html = '';
@@ -500,6 +511,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
             });
     }
 
+    // TREEK-PRO-START: topic_live_notice
     function startTreePolling(topicId, trigger) {
         stopTreePolling();
 
@@ -599,6 +611,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
             if (notice.parentNode) notice.remove();
         }, 15000);
     }
+    // TREEK-PRO-END: topic_live_notice
 
     function initAuthorTooltips(container) {
         let tooltip = document.querySelector('.treek-custom-tooltip');
@@ -633,6 +646,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
         }
     }
 
+    // TREEK-PRO-START: screen_teaser
     function initLazyScreenTeasers(container) {
         const placeholders = container.querySelectorAll('.treek-screen-teaser-placeholder');
 
@@ -676,6 +690,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
 
         placeholders.forEach(placeholder => observer.observe(placeholder));
     }
+    // TREEK-PRO-END: screen_teaser
 
     function showTree(trigger) {
         const topicId = trigger.getAttribute('data-topic-id');
@@ -806,7 +821,9 @@ function resolveParentLink(link, allowTokenRefresh = true) {
         document.body.appendChild(popover);
         currentPopover = popover;
 
+        // TREEK-PRO-START: settings_drag
         initSettingsDrag(popover);
+        // TREEK-PRO-END: settings_drag
 
         fetchTreeData(topicId, token, trigger)
             .then(data => {
@@ -827,7 +844,9 @@ if (activePostId) {
     activateTreeRow(activePostId);
 }
 
+// TREEK-PRO-START: topic_live_notice
 startTreePolling(topicId, trigger);
+// TREEK-PRO-END: topic_live_notice
 
             })
             .catch(err => {
@@ -917,17 +936,21 @@ function activateTreeRow(postId) {
     function getExportRows() {
     const rows = [...(cachedData?.rows || [])];
 
+    // TREEK-PRO-START: flat_view
     if (state.view === 'flat') {
         rows.sort((a, b) => a.id - b.id);
     }
+    // TREEK-PRO-END: flat_view
 
     return rows;
 }
 
 function getExportLevel(row) {
+    // TREEK-PRO-START: flat_view
     if (state.view !== 'tree') {
         return 0;
     }
+    // TREEK-PRO-END: flat_view
 
     return Math.max(0, parseInt(row.level, 10) || 0);
 }
@@ -946,6 +969,7 @@ function buildExportSubject(row, format) {
     const subject = normalizeExportText(row.subject, '...');
     const absoluteUrl = buildAbsolutePostUrl(row.id, row.postIndex);
 
+    // TREEK-PRO-START: export_bbcode_html
     if (format === 'bbcode') {
         return `[url="${absoluteUrl}"]${subject}[/url]`;
     }
@@ -953,6 +977,7 @@ function buildExportSubject(row, format) {
     if (format === 'html') {
         return `<a href="${escapeAttr(absoluteUrl)}">${escapeHtml(subject)}</a>`;
     }
+    // TREEK-PRO-END: export_bbcode_html
 
     return subject;
 }
@@ -960,7 +985,13 @@ function buildExportSubject(row, format) {
 function buildExportAuthor(row, format) {
     const author = normalizeExportText(row.username || row.author, 'Guest');
 
-    return format === 'html' ? escapeHtml(author) : author;
+    // TREEK-PRO-START: export_bbcode_html
+    if (format === 'html') {
+        return escapeHtml(author);
+    }
+    // TREEK-PRO-END: export_bbcode_html
+
+    return author;
 }
 
 function buildExportLine(row, format) {
@@ -994,6 +1025,7 @@ function buildExportLine(row, format) {
 function buildTreeExport(format) {
     const rows = getExportRows();
 
+    // TREEK-PRO-START: export_bbcode_html
     if (format === 'html') {
         return rows.map(row => {
             const level = getExportLevel(row);
@@ -1002,12 +1034,17 @@ function buildTreeExport(format) {
             return `<div style="padding-left:${margin}em">${buildExportLine(row, format)}</div>`;
         }).join('\n');
     }
+    // TREEK-PRO-END: export_bbcode_html
 
     return rows.map(row => {
     const level = getExportLevel(row);
-    const indent = format === 'text'
-    ? '\u00A0\u00A0\u00A0'.repeat(level)
-    : '.  '.repeat(level);
+    let indent = '\u00A0\u00A0\u00A0'.repeat(level);
+
+    // TREEK-PRO-START: export_bbcode_html
+    if (format !== 'text') {
+        indent = '.  '.repeat(level);
+    }
+    // TREEK-PRO-END: export_bbcode_html
     
     return indent + buildExportLine(row, format);
 }).join('\n');
@@ -1015,6 +1052,7 @@ function buildTreeExport(format) {
 }
 
 function getExportFormatLabel(format) {
+    // TREEK-PRO-START: export_bbcode_html
     if (format === 'bbcode') {
         return _('TREEK_EXPORT_BBCODE');
     }
@@ -1022,6 +1060,7 @@ function getExportFormatLabel(format) {
     if (format === 'html') {
         return _('TREEK_EXPORT_HTML');
     }
+    // TREEK-PRO-END: export_bbcode_html
 
     return _('TREEK_EXPORT_TEXT');
 }
@@ -1233,6 +1272,7 @@ function exportTreeToClipboard(format) {
         updateDateTimePreview();
     }
 
+    // TREEK-PRO-START: settings_drag
     function initSettingsDrag(popover) {
         const panel = popover.querySelector('.treek-settings-panel');
         const handle = popover.querySelector('.treek-settings-drag-handle');
@@ -1289,6 +1329,7 @@ function exportTreeToClipboard(format) {
             }
         });
     }
+    // TREEK-PRO-END: settings_drag
 
     const init = () => {
         document.addEventListener('click', function(e) {
@@ -1484,8 +1525,20 @@ if (e.target.closest('.treek-settings-save-params')) {
         document.addEventListener('change', function(e) {
             if (!currentPopover || !e.target.name) return;
 
+            // TREEK-PRO-START: flat_view
             if (e.target.name === 'tr_view') state.view = e.target.value;
-            if (e.target.name === 'tr_prim') state.primary = e.target.value;
+            // TREEK-PRO-END: flat_view
+
+            if (e.target.name === 'tr_prim') {
+                // TREEK-PRO-START: primary_author_subject
+                if (e.target.value === 'author') {
+                    state.primary = e.target.value;
+                } else
+                // TREEK-PRO-END: primary_author_subject
+                {
+                    state.primary = e.target.value;
+                }
+            }
             if (e.target.name === 'tr_time') {
                 state.showTime = e.target.checked;
 
@@ -1505,6 +1558,7 @@ if (e.target.name === 'tr_grid') {
 
 if (e.target.name === 'tr_grid_mode') state.gridMode = e.target.value;
 
+// TREEK-PRO-START: comfort_tools
 if (e.target.name === 'tr_show_comfort_tools') {
                 state.showComfortTools = e.target.checked;
 
@@ -1513,6 +1567,7 @@ if (e.target.name === 'tr_show_comfort_tools') {
             }
             if (e.target.name === 'tr_nav_tools') state.showNavTools = e.target.checked;
             if (e.target.name === 'tr_highlight_tools') state.showHighlightTools = e.target.checked;
+// TREEK-PRO-END: comfort_tools
 
             if (e.target.name === 'tr_show_teaser') {
                 state.showTeaser = e.target.checked;
@@ -1521,6 +1576,7 @@ if (e.target.name === 'tr_show_comfort_tools') {
                 if (wrap) wrap.style.display = state.showTeaser ? 'block' : 'none';
             }
 
+// TREEK-PRO-START: screen_teaser
 if (e.target.name === 'tr_teaser_mode') {
     state.teaserMode = e.target.value;
     state.teaserLen = (state.teaserMode === 'screen') ? 120 : 150;
@@ -1535,6 +1591,7 @@ if (e.target.name === 'tr_teaser_mode') {
     const teaserLen = currentPopover.querySelector('[name="tr_teaser_len"]');
     if (teaserLen) teaserLen.value = state.teaserLen;
 }
+// TREEK-PRO-END: screen_teaser
             if (e.target.name === 'tr_time_year') {
                 state.timeFormat.year = e.target.value;
                 updateDateTimePreview();

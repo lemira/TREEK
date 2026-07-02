@@ -121,7 +121,7 @@ foreach ($langFiles as $langFile) {
     }
 }
 
-$langs = json_encode($treekLangs, JSON_UNESCAPED_UNICODE);
+$langs = json_encode($treekLangs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_THROW_ON_ERROR);
 
 
             $doc->addScriptDeclaration("window.treekLangs = {$langs};");

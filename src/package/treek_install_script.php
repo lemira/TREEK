@@ -492,6 +492,8 @@ if ((string) $db->loadResult() !== $tableName) {
     throw new \RuntimeException('TreeK user parameters table was not found after CREATE TABLE: ' . $tableName);
 }
 
+$this->ensureUserParametersTableSchema($tableName);
+
 Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_CREATED'), 'notice');
 
 $this->log('Таблица пользовательских параметров TreeK создана или уже существует: ' . $tableName);
@@ -503,6 +505,57 @@ return true;
         $this->log($msg, Log::ERROR);
 
         return false;
+    }
+}
+
+protected function ensureUserParametersTableSchema(string $tableName): void
+{
+    $db = Factory::getDbo();
+
+    $db->setQuery('SHOW COLUMNS FROM ' . $db->quoteName($tableName) . ' LIKE ' . $db->quote('context'));
+
+    if (!$db->loadAssoc()) {
+        $db->setQuery(
+            'ALTER TABLE ' . $db->quoteName($tableName)
+            . ' ADD ' . $db->quoteName('context') . " varchar(64) NOT NULL DEFAULT 'default' AFTER "
+            . $db->quoteName('user_id')
+        );
+        $db->execute();
+    }
+
+    $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
+    $indexes = (array) $db->loadAssocList();
+    $byName = [];
+
+    foreach ($indexes as $index) {
+        $name = (string) ($index['Key_name'] ?? '');
+
+        if ($name === '' || $name === 'PRIMARY') {
+            continue;
+        }
+
+        $byName[$name][] = $index;
+    }
+
+    foreach ($byName as $name => $parts) {
+        $columns = array_map(static fn($part) => (string) ($part['Column_name'] ?? ''), $parts);
+        $isUnique = isset($parts[0]['Non_unique']) && (int) $parts[0]['Non_unique'] === 0;
+
+        if ($isUnique && $columns === ['user_id']) {
+            $db->setQuery('ALTER TABLE ' . $db->quoteName($tableName) . ' DROP INDEX ' . $db->quoteName($name));
+            $db->execute();
+        }
+    }
+
+    $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName) . ' WHERE Key_name = ' . $db->quote('idx_user_context'));
+
+    if (!$db->loadAssoc()) {
+        $db->setQuery(
+            'ALTER TABLE ' . $db->quoteName($tableName)
+            . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_context')
+            . ' (' . $db->quoteName('user_id') . ', ' . $db->quoteName('context') . ')'
+        );
+        $db->execute();
     }
 }
 

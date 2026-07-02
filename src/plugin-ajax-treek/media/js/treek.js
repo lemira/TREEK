@@ -24,6 +24,11 @@ const AJAX_URL = buildTreekAjaxUrl();
 
 const TREE_POLL_INTERVAL = 60000;
 
+let TREEK_EDITION = 'free';
+// TREEK-PRO-START: edition_flag
+TREEK_EDITION = 'pro';
+// TREEK-PRO-END: edition_flag
+
     let currentPopover = null;
     let currentTrigger = null;
     let cachedData = null;
@@ -40,36 +45,51 @@ const fallbackLangs = {
     TREEK_CLOSE: 'Close',
     TREEK_SET_SHOW_DATE_TIME: 'Show the post creation date and time',
     TREEK_SET_DATE: 'Date',
-    TREEK_POST_TOOLTIP_SYMBOL: '💬',
-    TREEK_AUTHOR_HIGHLIGHT_SYMBOL: '🧑',
+    TREEK_POST_TOOLTIP_SYMBOL: '...',
+    TREEK_AUTHOR_HIGHLIGHT_SYMBOL: 'A',
     TREEK_AUTHOR_HIGHLIGHT_SYMBOL_TITLE: 'Highlight all rows by the author of this post',
     TREEK_FAMILY_SYMBOL: 'Λ',
     TREEK_FAMILY_SYMBOL_TITLE: 'Highlight this row and all child posts',
-    TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL: '⇑',
+    TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL: '^',
     TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL_TITLE: 'Highlight the parent row of this post',
-    TREEK_NAV_TO_CHILD_IN_TREE_SYMBOL: '⇓',
+    TREEK_NAV_TO_CHILD_IN_TREE_SYMBOL: 'v',
     TREEK_NAV_TO_CHILD_IN_TREE_SYMBOL_TITLE: 'Highlight the child row with the specified number',
     TREEK_SET_GRID: 'Grid',
-    TREEK_TAB_CHARACTER_LIGHT_SYMBOL: '·',
-    TREEK_TAB_CHARACTER_HARD_SYMBOL: '│',
+    TREEK_TAB_CHARACTER_LIGHT_SYMBOL: '.',
+    TREEK_TAB_CHARACTER_HARD_SYMBOL: '|',
     TREEK_SET_GRID_LIGHT: 'Light grid',
     TREEK_SET_GRID_HARD: 'Heavy grid',
-    TREEK_SAVE_PARAMS_SYMBOL: '↪️',
-    TREEK_RESTORE_PARAMS_SYMBOL: '↩️',
+    TREEK_SAVE_PARAMS_SYMBOL: 'Save',
+    TREEK_RESTORE_PARAMS_SYMBOL: 'Restore',
     TREEK_SAVE_PARAMS_TITLE: 'Save settings',
     TREEK_RESTORE_PARAMS_TITLE: 'Restore settings',
     TREEK_PARAMS_SAVE_ERROR: 'Unable to save settings',
     TREEK_PARAMS_RESTORE_ERROR: 'Unable to restore settings',
-    TREEK_EXPORT_SYMBOL: '➡️',
+    TREEK_PARAMS_SAVED: 'Settings saved',
+    TREEK_PARAMS_RESTORED: 'Settings restored',
+    TREEK_EXPORT_SYMBOL: 'Export',
     TREEK_EXPORT_SYMBOL_TITLE: 'Export tree',
+    // TREEK-PRO-START: export_bbcode_html
     TREEK_EXPORT_BBCODE: 'BBCode',
     TREEK_EXPORT_HTML: 'HTML',
+    // TREEK-PRO-END: export_bbcode_html
     TREEK_EXPORT_TEXT: 'Text',
     TREEK_EXPORT_COPIED: 'Tree copied to clipboard',
     TREEK_EXPORT_COPY_ERROR: 'Failed to copy tree to clipboard',
     TREEK_SET_COMFORT_TOOLS: 'Show comfort symbols',
     TREEK_SET_NAV_TOOLS: 'Navigation arrows',
-    TREEK_SET_HIGHLIGHT_TOOLS: 'Highlighting'
+    TREEK_SET_HIGHLIGHT_TOOLS: 'Highlighting',
+    TREEK_PRO: 'Pro',
+    TREEK_PRO_LOCK_SYMBOL: 'Lock',
+    TREEK_PRO_OPTIONS: 'Pro options',
+    TREEK_PRO_LOCKED: 'Available in Pro',
+    TREEK_SET_FORUM_VIEW: 'Forum view',
+    TREEK_SET_PARENT_POST_NAVIGATION: 'Parent post arrow',
+    TREEK_SET_REPLY_FORM_TREEK_LOOK: 'Comfort form header',
+    TREEK_SET_SUBJECT_SUFFIX: 'Suffixes',
+    TREEK_SET_ATTACHMENTS_TOGGLE: 'Collapsed attachments',
+    TREEK_SET_INLINE_ACTION_BUTTONS: '3 action buttons',
+    TREEK_SET_FORUM_VIEW_REFRESH_NOTE: 'After changing Forum view settings, refresh the page.'
 };
 
     const defaultState = {
@@ -92,6 +112,10 @@ const fallbackLangs = {
     };
 
 let state = Object.assign({}, defaultState);
+let showProPreview = false;
+let showForumViewSettings = false;
+let treekViewFeatures = getDefaultTreekViewFeatures();
+let treekViewAutoSaveTimer = null;
 
 try {
     const sessionState = JSON.parse(sessionStorage.getItem('treek_settings') || '{}');
@@ -106,8 +130,89 @@ try {
 localStorage.removeItem('treek_settings');
 
 state.timeFormat = normalizeTimeFormat(state.timeFormat);
+normalizeEditionState();
 
 const saveState = () => sessionStorage.setItem('treek_settings', JSON.stringify(state));
+
+function normalizeEditionState() {
+    if (TREEK_EDITION !== 'free') {
+        return;
+    }
+
+    if (state.view === 'flat') {
+        state.view = 'tree';
+    }
+
+    if (state.primary === 'author') {
+        state.primary = 'subject';
+    }
+
+    if (state.teaserMode === 'screen') {
+        state.teaserMode = 'text';
+        state.teaserLen = 150;
+    }
+
+    state.showComfortTools = false;
+    state.showNavTools = false;
+    state.showHighlightTools = false;
+}
+
+function getDefaultTreekViewFeatures() {
+    return {
+        parent_post_navigation: true,
+        reply_form_treek_look: false,
+        subject_suffix: false,
+        attachments_toggle: false,
+        inline_action_buttons: false
+    };
+}
+
+function normalizeTreekViewFeatures(settings) {
+    const features = getDefaultTreekViewFeatures();
+
+    if (!settings || typeof settings !== 'object') {
+        return features;
+    }
+
+    Object.keys(features).forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(settings, key)) {
+            features[key] = !!settings[key];
+        }
+    });
+
+    return features;
+}
+
+function hasCustomTreekViewFeatures(features) {
+    const normalizedFeatures = normalizeTreekViewFeatures(features);
+    const defaultFeatures = getDefaultTreekViewFeatures();
+
+    return Object.keys(defaultFeatures).some(key => normalizedFeatures[key] !== defaultFeatures[key]);
+}
+
+function loadForumViewOpenState() {
+    try {
+        const value = sessionStorage.getItem('treek_forum_view_open');
+
+        if (value === null) {
+            return null;
+        }
+
+        return value === '1';
+    } catch (e) {
+        return null;
+    }
+}
+
+function saveForumViewOpenState() {
+    try {
+        sessionStorage.setItem('treek_forum_view_open', showForumViewSettings ? '1' : '0');
+    } catch (e) {
+        // Session storage can be unavailable in strict browser modes.
+    }
+}
+
+showForumViewSettings = loadForumViewOpenState() === true;
 
     const _ = (key) => {
         if (window.treekLangs && window.treekLangs[key]) return window.treekLangs[key];
@@ -337,6 +442,49 @@ function buildGridPrefix(level, indentSize) {
         <span class="treek-datetime-preview" style="font-size:13px; color:#333;">
             ${datePreview}${timePreview ? ' ' + timePreview : ''}
         </span>`;
+}
+
+function renderLockedProOption(label, detail = '') {
+    const hiddenClass = showProPreview ? '' : ' treek-pro-preview-hidden';
+
+    return `
+        <div class="treek-pro-locked-option${hiddenClass}" title="${escapeAttr(_('TREEK_PRO_LOCKED'))}">
+            <span class="treek-pro-lock" aria-hidden="true">${_('TREEK_PRO_LOCK_SYMBOL')}</span>
+            <span class="treek-pro-locked-label">${escapeHtml(label)}</span>
+            ${detail ? `<span class="treek-pro-locked-detail">${escapeHtml(detail)}</span>` : ''}
+        </div>`;
+}
+
+function renderInlineLockedProOption(label, detail = '') {
+    if (TREEK_EDITION !== 'free') {
+        return '';
+    }
+
+    return renderLockedProOption(label, detail);
+}
+
+function renderFreeProPreviewHtml() {
+    if (TREEK_EDITION !== 'free') {
+        return '';
+    }
+
+    const items = [
+        renderLockedProOption(
+            _('TREEK_SET_FORUM_VIEW'),
+            [
+                _('TREEK_SET_PARENT_POST_NAVIGATION'),
+                _('TREEK_SET_REPLY_FORM_TREEK_LOOK'),
+                _('TREEK_SET_SUBJECT_SUFFIX'),
+                _('TREEK_SET_ATTACHMENTS_TOGGLE'),
+                _('TREEK_SET_INLINE_ACTION_BUTTONS')
+            ].join(' / ')
+        )
+    ].join('');
+
+    return `
+        <div class="treek-settings-group treek-pro-preview" style="display:${showProPreview ? 'block' : 'none'};">
+            ${items}
+        </div>`;
 }
 
     function updateDateTimePreview() {
@@ -600,7 +748,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
         }).join('');
 
         notice.innerHTML = `
-            <button type="button" class="treek-live-notice__close" title="${_('TREEK_CLOSE')}">×</button>
+            <button type="button" class="treek-live-notice__close" title="${_('TREEK_CLOSE')}">${_('TREEK_CLOSE')}</button>
             <div class="treek-live-notice__title">${_('TREEK_LIVE_POSTS_ADDED')}</div>
             ${list}
         `;
@@ -719,37 +867,50 @@ function resolveParentLink(link, allowTokenRefresh = true) {
 
         popover.innerHTML = `
             <div class="treek-popover__header" style="display:flex; justify-content:space-between; align-items:center; padding:10px 16px; background:#ffffff; border-bottom:2px solid #eeeeee; flex-shrink:0;">
-                <span class="treek-popover__title">🌳 <span class="treek-topic-title">TreeK</span></span>
+                <span class="treek-popover__title">${_('TREEK_ICON')} <span class="treek-topic-title">TreeK</span></span>
                 <div style="display: flex; gap: 10px; align-items: center;">
     <button type="button" class="treek-popover__export-btn" title="${_('TREEK_EXPORT_SYMBOL_TITLE')}">${_('TREEK_EXPORT_SYMBOL')}</button>
-    <button type="button" class="treek-popover__settings-btn" title="${_('TREEK_SETTINGS')}">⚙</button>
-    <button type="button" class="treek-popover__close">✕</button>
+    <button type="button" class="treek-popover__settings-btn" title="${_('TREEK_SETTINGS')}">${_('TREEK_SETTINGS')}</button>
+    <button type="button" class="treek-popover__close">${_('TREEK_CLOSE')}</button>
                 </div>
             </div>
             
 <div class="treek-export-panel" style="display:none; position:absolute; top:50px; right:58px; width:180px; background:#fff; border:1px solid #ccc; border-radius:8px; box-shadow:0 4px 15px rgba(0,0,0,0.2); z-index:10001; padding:8px;">
+    <!-- TREEK-PRO-START: export_bbcode_html -->
     <button type="button" class="treek-export-format" data-format="bbcode" style="display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:7px 8px;">${_('TREEK_EXPORT_BBCODE')}</button>
     <button type="button" class="treek-export-format" data-format="html" style="display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:7px 8px;">${_('TREEK_EXPORT_HTML')}</button>
+    <!-- TREEK-PRO-END: export_bbcode_html -->
+    ${renderInlineLockedProOption(_('TREEK_EXPORT_BBCODE') + ' / ' + _('TREEK_EXPORT_HTML'))}
     <button type="button" class="treek-export-format" data-format="text" style="display:block; width:100%; text-align:left; background:none; border:none; cursor:pointer; padding:7px 8px;">${_('TREEK_EXPORT_TEXT')}</button>
 </div>            
             
             <div class="treek-settings-panel" style="display: none; position: absolute; top: 50px; right: 20px; width: 260px; max-height: calc(85vh - 70px); overflow: hidden; background: #fff; border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10001; padding: 0;">
     <div class="treek-settings-drag-handle" style="cursor: move; padding: 8px 12px; background: #f5f5f5; border-bottom: 1px solid #ddd; border-radius: 8px 8px 0 0; display: flex; justify-content: space-between; align-items: center; user-select: none;">
-                    <strong>⚙ ${_('TREEK_USER_SETTINGS')}</strong>
+                    <strong>${_('TREEK_SETTINGS')} ${_('TREEK_USER_SETTINGS')}</strong>
                     <div style="display:flex; align-items:center; gap:4px;">
+                        ${TREEK_EDITION === 'free' ? `<button type="button" class="treek-settings-pro-preview-btn" title="${_('TREEK_PRO_LOCKED')}" style="background:none; border:1px solid #bbb; border-radius:4px; cursor:pointer; font-size:12px; padding:1px 5px;">${_('TREEK_PRO_LOCK_SYMBOL')} ${_('TREEK_PRO')}</button>` : ''}
+                        ${TREEK_EDITION === 'free' ? `<button type="button" class="treek-settings-save-params-locked treek-pro-preview-hidden" title="${_('TREEK_PRO_LOCKED')}" style="background:none; border:1px solid #d7a43b; border-radius:4px; color:#8a6500; cursor:default; font-size:12px; padding:1px 5px;">${_('TREEK_PRO_LOCK_SYMBOL')} ${_('TREEK_SAVE_PARAMS_SYMBOL')}</button>` : ''}
+                        <!-- TREEK-PRO-START: settings_persistence -->
                         <button type="button" class="treek-settings-save-params" title="${_('TREEK_SAVE_PARAMS_TITLE')}" style="display:none; background:none; border:none; cursor:pointer; font-size:15px; padding:0 4px;">${_('TREEK_SAVE_PARAMS_SYMBOL')}</button>
                         <button type="button" class="treek-settings-restore-params" title="${_('TREEK_RESTORE_PARAMS_TITLE')}" style="display:none; background:none; border:none; cursor:pointer; font-size:15px; padding:0 4px;">${_('TREEK_RESTORE_PARAMS_SYMBOL')}</button>
-                        <button type="button" class="treek-settings-close" style="background:none; border:none; cursor:pointer; font-size:16px; padding:0 6px;">✕</button>
+                        <!-- TREEK-PRO-END: settings_persistence -->
+                        <button type="button" class="treek-settings-close" style="background:none; border:none; cursor:pointer; font-size:16px; padding:0 6px;">${_('TREEK_CLOSE')}</button>
                     </div>
                 </div>
                                 <div class="treek-settings-scroll" style="max-height: calc(85vh - 118px); overflow-y: auto;">
                 <div class="treek-settings-group" style="padding: 10px 12px; border-bottom: 1px solid #eee;"><label style="display:block; font-size:11px; font-weight:bold; color:#777; margin-bottom:6px;">${_('TREEK_SET_VIEW_MODE')}</label>
                     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;"><input type="radio" name="tr_view" value="tree" ${state.view==='tree'?'checked':''}> ${_('TREEK_SET_VIEW_TREE')}</div>
+                    <!-- TREEK-PRO-START: flat_view -->
                     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;"><input type="radio" name="tr_view" value="flat" ${state.view==='flat'?'checked':''}> ${_('TREEK_SET_VIEW_FLAT')}</div>
+                    <!-- TREEK-PRO-END: flat_view -->
+                    ${renderInlineLockedProOption(_('TREEK_SET_VIEW_FLAT'))}
                 </div>
                 <div class="treek-settings-group" style="padding: 10px 12px; border-bottom: 1px solid #eee;"><label style="display:block; font-size:11px; font-weight:bold; color:#777; margin-bottom:6px;">${_('TREEK_SET_START_OF_LINE')}</label>
     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;"><input type="radio" name="tr_prim" value="subject" ${state.primary==='subject'?'checked':''}> ${_('TREEK_SET_PRIMARY_SUBJECT_AUTHOR')}</div>
+    <!-- TREEK-PRO-START: primary_author_subject -->
     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;"><input type="radio" name="tr_prim" value="author" ${state.primary==='author'?'checked':''}> ${_('TREEK_SET_PRIMARY_AUTHOR_SUBJECT')}</div>
+    <!-- TREEK-PRO-END: primary_author_subject -->
+    ${renderInlineLockedProOption(_('TREEK_SET_PRIMARY_AUTHOR_SUBJECT'))}
     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;"><input type="radio" name="tr_prim" value="subject_only" ${state.primary==='subject_only'?'checked':''}> ${_('TREEK_SET_PRIMARY_SUBJECT_ONLY')}</div>
                 </div>
 <div class="treek-settings-group" style="padding: 10px 12px; border-bottom: 1px solid #eee;">
@@ -762,10 +923,13 @@ function resolveParentLink(link, allowTokenRefresh = true) {
                             ${_('TREEK_SET_TEASER_MODE_TEXT')}
                         </label>
 
+                        <!-- TREEK-PRO-START: screen_teaser -->
                         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;">
                             <input type="radio" name="tr_teaser_mode" value="screen" ${state.teaserMode === 'screen' ? 'checked' : ''}>
                             ${_('TREEK_SET_TEASER_MODE_SCREEN')}
                         </label>
+                        <!-- TREEK-PRO-END: screen_teaser -->
+                        ${renderInlineLockedProOption(_('TREEK_SET_TEASER_MODE_SCREEN'))}
 
                         <div style="margin-top: 6px;">
                             <small class="treek-teaser-len-label">${state.teaserMode === 'screen' ? _('TREEK_SET_TEASER_LEN_SCREEN') : _('TREEK_SET_TEASER_LEN_TEXT')}:</small>
@@ -806,6 +970,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
     </div>
 </div>
 
+<!-- TREEK-PRO-START: comfort_tools -->
 <div class="treek-settings-group" style="padding: 10px 12px;">
     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;">
         <input type="checkbox" name="tr_show_comfort_tools" ${state.showComfortTools?'checked':''}> <strong>${_('TREEK_SET_COMFORT_TOOLS')}</strong>
@@ -816,6 +981,24 @@ function resolveParentLink(link, allowTokenRefresh = true) {
                         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tr_highlight_tools" ${state.showHighlightTools?'checked':''}> ${_('TREEK_SET_HIGHLIGHT_TOOLS')}</label>
                     </div>
                 </div>
+<!-- TREEK-PRO-END: comfort_tools -->
+${renderInlineLockedProOption(_('TREEK_SET_COMFORT_TOOLS'), _('TREEK_SET_NAV_TOOLS') + ' / ' + _('TREEK_SET_HIGHLIGHT_TOOLS'))}
+<!-- TREEK-PRO-START: treek_view_settings -->
+<div class="treek-settings-group" style="padding: 10px 12px;">
+    <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;">
+        <input type="checkbox" name="tr_forum_view" ${showForumViewSettings ? 'checked' : ''}> <strong>${_('TREEK_SET_FORUM_VIEW')}</strong>
+    </div>
+    <div id="treek_forum_view_setup" style="margin-left:22px; margin-top:4px; display:${showForumViewSettings ? 'block' : 'none'}; font-size:12px; color:#444;">
+        <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_parent_post_navigation" ${treekViewFeatures.parent_post_navigation ? 'checked' : ''}> ${_('TREEK_SET_PARENT_POST_NAVIGATION')} ${_('TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL')}</label>
+        <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_reply_form_treek_look" ${treekViewFeatures.reply_form_treek_look ? 'checked' : ''}> ${_('TREEK_SET_REPLY_FORM_TREEK_LOOK')}</label>
+        <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_subject_suffix" ${treekViewFeatures.subject_suffix ? 'checked' : ''}> ${_('TREEK_SET_SUBJECT_SUFFIX')}</label>
+        <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_attachments_toggle" ${treekViewFeatures.attachments_toggle ? 'checked' : ''}> ${_('TREEK_SET_ATTACHMENTS_TOGGLE')}</label>
+        <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_inline_action_buttons" ${treekViewFeatures.inline_action_buttons ? 'checked' : ''}> ${_('TREEK_SET_INLINE_ACTION_BUTTONS')}</label>
+        <div class="treek-forum-view-note">${_('TREEK_SET_FORUM_VIEW_REFRESH_NOTE')}</div>
+    </div>
+</div>
+<!-- TREEK-PRO-END: treek_view_settings -->
+${renderFreeProPreviewHtml()}
                             </div>
             </div>
             <div class="treek-popover__body" style="flex:1; overflow:auto; padding:15px;"><div class="treek-loading">${_('TREEK_LOADING')}</div></div>
@@ -831,6 +1014,15 @@ function resolveParentLink(link, allowTokenRefresh = true) {
         fetchTreeData(topicId, token, trigger)
             .then(data => {
                 cachedData = data;
+                treekViewFeatures = normalizeTreekViewFeatures(data.treekViewFeatures);
+                window.treekViewFeatures = treekViewFeatures;
+                {
+                    const savedForumViewOpen = loadForumViewOpenState();
+                    showForumViewSettings = savedForumViewOpen === null
+                        ? hasCustomTreekViewFeatures(treekViewFeatures)
+                        : savedForumViewOpen;
+                }
+                syncSettingsControls();
                 treeLastPostId = getCurrentLastPostId();
                 updateUserParamsButtons();
 
@@ -1157,18 +1349,27 @@ function exportTreeToClipboard(format) {
         const userParams = cachedData?.userParams || {};
         const saveBtn = currentPopover.querySelector('.treek-settings-save-params');
         const restoreBtn = currentPopover.querySelector('.treek-settings-restore-params');
+        const lockedSaveBtn = currentPopover.querySelector('.treek-settings-save-params-locked');
+
+        if (TREEK_EDITION === 'free') {
+            if (saveBtn) saveBtn.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'none';
+            if (lockedSaveBtn) lockedSaveBtn.classList.toggle('treek-pro-preview-hidden', !showProPreview);
+            return;
+        }
 
         if (saveBtn) saveBtn.style.display = userParams.canSave ? 'inline-block' : 'none';
         if (restoreBtn) restoreBtn.style.display = (userParams.canSave && userParams.hasSaved) ? 'inline-block' : 'none';
     }
 
-    function fetchUserParamsTask(task, payload = null, allowTokenRefresh = true) {
+    function fetchUserParamsTask(task, payload = null, context = 'default', allowTokenRefresh = true) {
         if (!currentPopover || !currentTrigger) {
             return Promise.reject(new Error(_('TREEK_ERROR_REFRESH_TREE')));
         }
 
         const topicId = currentPopover.dataset.topicId;
         const token = currentTrigger.getAttribute('data-token');
+        const contextParam = context ? `&context=${encodeURIComponent(context)}` : '';
         const options = {
             headers: {
                 'Accept': 'application/json'
@@ -1182,13 +1383,13 @@ function exportTreeToClipboard(format) {
             options.body = JSON.stringify(payload);
         }
 
-        return fetch(`${AJAX_URL}&task=${task}&topic_id=${topicId}&${token}=1`, options)
+        return fetch(`${AJAX_URL}&task=${task}&topic_id=${topicId}${contextParam}&${token}=1`, options)
             .then(parseAjaxJsonResponse)
             .then(data => {
                 if (isTokenError(data.error) && allowTokenRefresh) {
                     return fetchFreshToken().then(freshToken => {
                         currentTrigger.setAttribute('data-token', freshToken);
-                        return fetchUserParamsTask(task, payload, false);
+                        return fetchUserParamsTask(task, payload, context, false);
                     });
                 }
 
@@ -1199,13 +1400,32 @@ function exportTreeToClipboard(format) {
     }
 
     function saveUserParams() {
-        return fetchUserParamsTask('params_save', {
+        const saveTree = fetchUserParamsTask('params_save', {
             settings: getPersistableState()
-        }).then(data => {
-            cachedData.userParams = Object.assign({}, cachedData.userParams || {}, {
-                canSave: true,
-                hasSaved: true
-            });
+        });
+
+        const saveTreekView = TREEK_EDITION === 'pro'
+            ? fetchUserParamsTask('params_save', {
+                context: 'treek_view',
+                settings: treekViewFeatures
+            }, 'treek_view')
+            : Promise.resolve(null);
+
+        return Promise.all([saveTree, saveTreekView]).then(([data, viewData]) => {
+            cachedData.userParams = Object.assign(
+                {},
+                cachedData.userParams || {},
+                data?.userParams || {},
+                viewData?.userParams || {},
+                {
+                    canSave: true,
+                    hasSaved: true,
+                    hasSavedTree: true,
+                    hasSavedTreekView: TREEK_EDITION === 'pro'
+                        ? true
+                        : !!(data?.userParams?.hasSavedTreekView || cachedData.userParams?.hasSavedTreekView)
+                }
+            );
 
             updateUserParamsButtons();
 
@@ -1214,18 +1434,85 @@ function exportTreeToClipboard(format) {
     }
 
     function restoreUserParams() {
-        return fetchUserParamsTask('params_restore').then(data => {
-            if (!data.settings) throw new Error(_('TREEK_PARAMS_RESTORE_ERROR'));
+        const restoreErrors = [];
 
-            state = Object.assign({}, defaultState, data.settings);
-            state.timeFormat = normalizeTimeFormat(state.timeFormat);
+        const restoreTree = fetchUserParamsTask('params_restore')
+            .catch(err => {
+                restoreErrors.push(`default: ${err.message}`);
+                return null;
+            });
+
+        const restoreTreekView = TREEK_EDITION === 'pro'
+            ? fetchUserParamsTask('params_restore', null, 'treek_view').catch(err => {
+                restoreErrors.push(`treek_view: ${err.message}`);
+                return null;
+            })
+            : Promise.resolve(null);
+
+        return Promise.all([restoreTree, restoreTreekView]).then(([treeData, viewData]) => {
+            if (!treeData?.settings && !viewData?.settings) {
+                throw new Error(restoreErrors.join('; ') || _('TREEK_PARAMS_RESTORE_ERROR'));
+            }
+
+            if (treeData?.settings) {
+                state = Object.assign({}, defaultState, treeData.settings);
+                state.timeFormat = normalizeTimeFormat(state.timeFormat);
+                normalizeEditionState();
+            }
+
+            if (viewData?.settings) {
+                treekViewFeatures = normalizeTreekViewFeatures(viewData.settings);
+                window.treekViewFeatures = treekViewFeatures;
+                {
+                    const savedForumViewOpen = loadForumViewOpenState();
+                    showForumViewSettings = savedForumViewOpen === null
+                        ? hasCustomTreekViewFeatures(treekViewFeatures)
+                        : savedForumViewOpen;
+                }
+            }
 
             saveState();
             syncSettingsControls();
             renderContent();
 
-            return data;
+            return treeData || viewData;
         });
+    }
+
+    function scheduleTreekViewAutoSave() {
+        if (TREEK_EDITION !== 'pro' || !cachedData?.userParams?.canSave) {
+            return;
+        }
+
+        if (treekViewAutoSaveTimer) {
+            window.clearTimeout(treekViewAutoSaveTimer);
+        }
+
+        treekViewAutoSaveTimer = window.setTimeout(() => {
+            treekViewAutoSaveTimer = null;
+
+            fetchUserParamsTask('params_save', {
+                context: 'treek_view',
+                settings: treekViewFeatures
+            }, 'treek_view')
+                .then(data => {
+                    cachedData.userParams = Object.assign(
+                        {},
+                        cachedData.userParams || {},
+                        data?.userParams || {},
+                        {
+                            canSave: true,
+                            hasSaved: true,
+                            hasSavedTreekView: true
+                        }
+                    );
+
+                    updateUserParamsButtons();
+                })
+                .catch(err => {
+                    console.warn('TREEK treek_view autosave failed', err);
+                });
+        }, 500);
     }
 
     function syncSettingsControls() {
@@ -1253,9 +1540,19 @@ function exportTreeToClipboard(format) {
         setChecked('tr_index', state.showIndex);
         setChecked('tr_grid', state.showGrid);
         setRadio('tr_grid_mode', state.gridMode);
+        // TREEK-PRO-START: comfort_tools
         setChecked('tr_show_comfort_tools', state.showComfortTools);
         setChecked('tr_nav_tools', state.showNavTools);
         setChecked('tr_highlight_tools', state.showHighlightTools);
+        // TREEK-PRO-END: comfort_tools
+        // TREEK-PRO-START: treek_view_settings
+        setChecked('tr_forum_view', showForumViewSettings);
+        setChecked('tv_parent_post_navigation', treekViewFeatures.parent_post_navigation);
+        setChecked('tv_reply_form_treek_look', treekViewFeatures.reply_form_treek_look);
+        setChecked('tv_subject_suffix', treekViewFeatures.subject_suffix);
+        setChecked('tv_attachments_toggle', treekViewFeatures.attachments_toggle);
+        setChecked('tv_inline_action_buttons', treekViewFeatures.inline_action_buttons);
+        // TREEK-PRO-END: treek_view_settings
 
         const teaserLen = currentPopover.querySelector('[name="tr_teaser_len"]');
         if (teaserLen) teaserLen.value = state.teaserLen;
@@ -1269,8 +1566,14 @@ function exportTreeToClipboard(format) {
         const gridSetup = currentPopover.querySelector('#treek_grid_setup');
         if (gridSetup) gridSetup.style.display = state.showGrid ? 'block' : 'none';
 
+        // TREEK-PRO-START: comfort_tools
         const comfortSetup = currentPopover.querySelector('#treek_comfort_tools_setup');
         if (comfortSetup) comfortSetup.style.display = state.showComfortTools ? 'block' : 'none';
+        // TREEK-PRO-END: comfort_tools
+        // TREEK-PRO-START: treek_view_settings
+        const forumViewSetup = currentPopover.querySelector('#treek_forum_view_setup');
+        if (forumViewSetup) forumViewSetup.style.display = showForumViewSettings ? 'block' : 'none';
+        // TREEK-PRO-END: treek_view_settings
 
         updateDateTimePreview();
     }
@@ -1487,29 +1790,61 @@ if (e.target.closest('.treek-popover__settings-btn')) {
     return;
 }
 
+// TREEK-PRO-START: settings_persistence
 if (e.target.closest('.treek-settings-save-params')) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                saveUserParams().catch(err => {
+                saveUserParams()
+                    .then(data => {
+                        console.info('TREEK params saved', data);
+                        showExportNotice(_('TREEK_PARAMS_SAVED'));
+                    })
+                    .catch(err => {
                     console.warn('TREEK params save failed', err);
-                    alert(_('TREEK_PARAMS_SAVE_ERROR'));
+                    alert(err && err.message ? err.message : _('TREEK_PARAMS_SAVE_ERROR'));
                 });
 
                 return;
             }
+// TREEK-PRO-END: settings_persistence
 
+            if (e.target.closest('.treek-settings-pro-preview-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                showProPreview = !showProPreview;
+
+                const preview = currentPopover.querySelector('.treek-pro-preview');
+                if (preview) preview.style.display = showProPreview ? 'block' : 'none';
+
+                currentPopover.querySelectorAll('.treek-pro-locked-option').forEach(option => {
+                    option.classList.toggle('treek-pro-preview-hidden', !showProPreview);
+                });
+
+                updateUserParamsButtons();
+
+                return;
+            }
+
+            // TREEK-PRO-START: settings_persistence
             if (e.target.closest('.treek-settings-restore-params')) {
                 e.preventDefault();
                 e.stopPropagation();
 
-                restoreUserParams().catch(err => {
+                restoreUserParams()
+                    .then(data => {
+                        console.info('TREEK params restored', data);
+                        showExportNotice(_('TREEK_PARAMS_RESTORED'));
+                    })
+                    .catch(err => {
                     console.warn('TREEK params restore failed', err);
-                    alert(_('TREEK_PARAMS_RESTORE_ERROR'));
+                    alert(err && err.message ? err.message : _('TREEK_PARAMS_RESTORE_ERROR'));
                 });
 
                 return;
             }
+            // TREEK-PRO-END: settings_persistence
 
             if (e.target.closest('.treek-settings-close')) {
                 e.stopPropagation();
@@ -1571,6 +1906,27 @@ if (e.target.name === 'tr_show_comfort_tools') {
             if (e.target.name === 'tr_nav_tools') state.showNavTools = e.target.checked;
             if (e.target.name === 'tr_highlight_tools') state.showHighlightTools = e.target.checked;
 // TREEK-PRO-END: comfort_tools
+
+// TREEK-PRO-START: treek_view_settings
+if (e.target.name === 'tr_forum_view') {
+    showForumViewSettings = e.target.checked;
+    saveForumViewOpenState();
+
+    const setup = currentPopover.querySelector('#treek_forum_view_setup');
+    if (setup) setup.style.display = showForumViewSettings ? 'block' : 'none';
+}
+
+if (e.target.name === 'tv_parent_post_navigation') treekViewFeatures.parent_post_navigation = e.target.checked;
+if (e.target.name === 'tv_reply_form_treek_look') treekViewFeatures.reply_form_treek_look = e.target.checked;
+if (e.target.name === 'tv_subject_suffix') treekViewFeatures.subject_suffix = e.target.checked;
+if (e.target.name === 'tv_attachments_toggle') treekViewFeatures.attachments_toggle = e.target.checked;
+if (e.target.name === 'tv_inline_action_buttons') treekViewFeatures.inline_action_buttons = e.target.checked;
+
+if (e.target.name && e.target.name.startsWith('tv_')) {
+    window.treekViewFeatures = treekViewFeatures;
+    scheduleTreekViewAutoSave();
+}
+// TREEK-PRO-END: treek_view_settings
 
             if (e.target.name === 'tr_show_teaser') {
                 state.showTeaser = e.target.checked;

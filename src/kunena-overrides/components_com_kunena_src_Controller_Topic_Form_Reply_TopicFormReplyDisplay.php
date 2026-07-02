@@ -88,7 +88,7 @@ class TopicFormReplyDisplay extends KunenaControllerDisplay
 
     public $captchaDisplay;
 
-    public $headerTextPlain;
+    protected $headerTextPlain;
 
     /**
      * Prepare topic reply form.

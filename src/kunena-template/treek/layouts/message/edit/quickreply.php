@@ -37,6 +37,7 @@ $config   = isset($this->config) ? $this->config : KunenaFactory::getConfig();
 $me       = isset($this->me) ? $this->me : KunenaUserHelper::getMyself();
 $template = KunenaTemplate::getInstance();
 $subjectSuffixEnabled = $template->treekFeature('subject_suffix');
+$replyFormTreekLookEnabled = $template->treekFeature('reply_form_treek_look');
 
 $this->addScriptOptions('com_kunena.kunena_topicicontype', '');
 
@@ -145,7 +146,7 @@ if ($subjectSuffixEnabled) {
                                     autocomplete="off"
                                     value=""
                                 <?php else : ?>
-                                    value="<?php echo $message->displayField('subject'); ?>"
+                                    value="<?php echo $replyFormTreekLookEnabled ? '' : $message->displayField('subject'); ?>"
                                 <?php endif; ?> />
                         </div>
 
@@ -264,7 +265,7 @@ if ($subjectSuffixEnabled) {
                                         autocomplete="off"
                                         value=""
                                     <?php else : ?>
-                                        value="<?php echo $message->displayField('subject'); ?>"
+                                        value="<?php echo $replyFormTreekLookEnabled ? '' : $message->displayField('subject'); ?>"
                                     <?php endif; ?> />
                             </div>
 

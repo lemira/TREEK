@@ -31,6 +31,7 @@ HTMLHelper::_('behavior.formvalidator');
 HTMLHelper::_('behavior.keepalive');
 
 $subjectSuffixEnabled = $this->ktemplate->treekFeature('subject_suffix');
+$replyFormTreekLookEnabled = $this->ktemplate->treekFeature('reply_form_treek_look');
 
 // Add assets
 $this->wa->registerAndUseStyle('fileupload', 'media/kunena/core/css/fileupload.css')
@@ -208,7 +209,7 @@ Text::script('COM_KUNENA_POLL_TITLE');
     </h5>
 <?php else : ?>
     <h1>
-        <?php echo $this->escape($this->headerTextPlain ?? strip_tags((string) $this->headerText)); ?>
+        <?php echo $this->escape(strip_tags((string) $this->headerText)); ?>
     </h1>
 <?php endif; ?>
 
@@ -299,6 +300,7 @@ Text::script('COM_KUNENA_POLL_TITLE');
         <?php
         $isReplyForm = $this->message->parent > 0 && !$this->message->exists();
         $useSubjectSuffix = $isReplyForm && $subjectSuffixEnabled;
+        $clearReplySubject = $isReplyForm && $replyFormTreekLookEnabled && !$useSubjectSuffix;
         ?>
 
         <div class="form-group row">
@@ -342,7 +344,7 @@ Text::script('COM_KUNENA_POLL_TITLE');
                         placeholder="<?php echo Text::_('COM_KUNENA_TOPIC_EDIT_PLACEHOLDER_SUBJECT') ?>"
                         name="subject" id="subject"
                         maxlength="<?php echo $this->escape($this->ktemplate->params->get('SubjectLengthMessage')); ?>"
-                        tabindex="6" value="<?php echo !empty($this->message->subject) ? $this->escape($this->message->subject) : ''; ?>" />
+                        tabindex="6" value="<?php echo $clearReplySubject ? '' : (!empty($this->message->subject) ? $this->escape($this->message->subject) : ''); ?>" />
                 <?php else : ?>
                     <input class="form-control" type="text"
                         placeholder="<?php echo Text::_('COM_KUNENA_TOPIC_EDIT_PLACEHOLDER_SUBJECT') ?>"

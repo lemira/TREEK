@@ -28,6 +28,7 @@ use Kunena\Forum\Libraries\User\KunenaUserHelper;
 $message  = $this->message;
 $template = KunenaTemplate::getInstance();
 $subjectSuffixEnabled = $template->treekFeature('subject_suffix');
+$replyFormTreekLookEnabled = $template->treekFeature('reply_form_treek_look');
 
 if (!$message->isAuthorised('reply')) {
     return;
@@ -136,7 +137,7 @@ if ($subjectSuffixEnabled) {
                         autocomplete="off"
                         value=""
                     <?php else : ?>
-                        value="<?php echo $message->displayField('subject'); ?>"
+                        value="<?php echo $replyFormTreekLookEnabled ? '' : $message->displayField('subject'); ?>"
                     <?php endif; ?> />
             </div>
 

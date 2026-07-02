@@ -160,6 +160,7 @@ const rowClass = 'treek-row treek-row-link'
             const author = `<span class="treek-row__author">${authorName}</span>`;
             const subject = `<span class="treek-row__subject">${escapeHtml(row.subject || '...')}</span>`;
             const tooltip = `<span class="treek-row__tooltip-symbol" data-treek-tooltip="${escapeAttr(tooltipText)}">${_('TREEK_POST_TOOLTIP_SYMBOL')}</span>`;
+            let comfort = '';
 
             // TREEK-PRO-START: comfort_tools
             const parentTool = (state.showComfortTools && state.showNavTools && isTreeView && parseInt(row.parent, 10) > 0)
@@ -179,7 +180,7 @@ const rowClass = 'treek-row treek-row-link'
 const familyTool = (state.showComfortTools && state.showHighlightTools && hasChildren)
     ? `<span class="treek-row__tool treek-row__tool--family" data-post-id="${row.id}" title="${_('TREEK_FAMILY_SYMBOL_TITLE')}" aria-label="${_('TREEK_FAMILY_SYMBOL_TITLE')}">${_('TREEK_FAMILY_SYMBOL')}</span>`
     : '';
-const comfort = (parentTool || childTools || authorTool || familyTool)
+comfort = (parentTool || childTools || authorTool || familyTool)
                 ? `<span class="treek-row__comfort">${parentTool}${childTools}${authorTool}${familyTool}</span>`
                 : '';
             // TREEK-PRO-END: comfort_tools
@@ -480,6 +481,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
             });
     }
 
+    // TREEK-PRO-START: topic_live_notice
     function fetchTreeLastPostId(topicId, token, trigger, allowTokenRefresh = true) {
         return fetch(`${AJAX_URL}&task=signature&topic_id=${topicId}&${token}=1`, {
             headers: {
@@ -511,7 +513,6 @@ function resolveParentLink(link, allowTokenRefresh = true) {
             });
     }
 
-    // TREEK-PRO-START: topic_live_notice
     function startTreePolling(topicId, trigger) {
         stopTreePolling();
 
@@ -533,6 +534,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
                 });
         }, TREE_POLL_INTERVAL);
     }
+    // TREEK-PRO-END: topic_live_notice
 
     function stopTreePolling() {
         if (treePollTimer) {
@@ -544,6 +546,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
         treeRefreshInProgress = false;
     }
 
+    // TREEK-PRO-START: topic_live_notice
     function refreshTreeAfterNewPost(topicId, trigger, oldLastPostId) {
         if (!currentPopover || !cachedData) return;
 

@@ -1,8 +1,16 @@
 # TreeK
 
-TreeK adds a post tree to Kunena topics. It helps readers see reply structure,
-jump between related posts, and navigate long discussions without losing the
-context of who answered whom.
+TreeK adds a post tree to Kunena topics. This helps users see the structure of
+responses, switch between related posts, and navigate long discussions without
+losing the context of who replied to whom.
+
+The settings of the tree window allow the user to see the content of a single
+post or teasers (beginnings) of all posts on the topic at once, choose a
+convenient tree view, immediately receive a message about adding a new post to
+the topic, etc. without leaving the window.
+
+All actions for creating themes, adding and changing posts, etc. are carried out
+in the usual way in Kunena.
 
 TreeK is built for Joomla and Kunena Forum.
 
@@ -49,7 +57,7 @@ This repository is the public information and release home for TreeK Free.
 
 It intentionally does not contain:
 
-- TreeK Pro source code;
+- TreeK source code;
 - TreeK Pro installation packages;
 - internal build scripts or private packaging assets.
 
@@ -60,3 +68,4 @@ committed into the repository.
 
 TreeK Free is distributed under the GNU General Public License v3.0. See
 [LICENSE](LICENSE).
+

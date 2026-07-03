@@ -3,6 +3,10 @@
 TreeK Free is intended to be a real working edition, not a demo. TreeK Pro adds
 comfort, export, monitoring, and forum-view workflow features.
 
+The meaning of TreeK options and the ways to use them are described in more detail at:
+
+https://treek.support
+
 ## Free
 
 - Open the post tree from a Kunena topic and from the topics list.
@@ -41,4 +45,6 @@ comfort, export, monitoring, and forum-view workflow features.
 TreeK Free does not include Pro implementation code. Pro options may be shown in
 the Free user interface as locked preview items, but executable Pro features are
 not shipped in the Free package.
+
+
 

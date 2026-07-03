@@ -33,9 +33,4 @@ Feature descriptions, examples, screenshots/slides, and feedback forum are avail
 
 https://treek.support
 
-## Notes for JED
-
-- Keep Free features and Pro features clearly separated.
-- Mention that the Free package does not include Pro implementation code.
-- Add screenshots or a short screencast before publication.
 

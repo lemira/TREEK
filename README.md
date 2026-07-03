@@ -64,8 +64,15 @@ It intentionally does not contain:
 Free installation packages should be attached to GitHub Releases rather than
 committed into the repository.
 
+## Support
+
+If you like this project, you can make a donation via PayPal:
+
+[https://paypal.me/lemiratGiCh](https://paypal.me/lemiratGiCh)
+
 ## License
 
 TreeK Free is distributed under the GNU General Public License v3.0. See
 [LICENSE](LICENSE).
+
 

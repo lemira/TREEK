@@ -1,8 +1,10 @@
 # JED Description Draft
 
-TreeK adds a post tree to Kunena topics. It makes long forum discussions easier
-to read by showing the reply structure of a topic and helping users jump between
-related posts.
+TreeK adds a post tree to Kunena topics. This helps users see the structure of responses, switch between related posts, and navigate long discussions without losing the context of who replied to whom.
+
+The settings of the tree window allow the user to see the content of a single post or teasers (beginnings) of all posts on the topic at once, choose a convenient tree view, immediately receive a message about adding a new post to the topic, etc. without leaving the window.
+
+All actions for creating themes, adding and changing posts, etc. are carried out in the usual way in Kunena.
 
 ## Short Description
 
@@ -11,7 +13,7 @@ TreeK adds a structured post tree to Kunena Forum topics.
 ## Main Features
 
 - Open a post tree from Kunena topics.
-- Display post hierarchy.
+- Display post connections.
 - Highlight the latest and active posts.
 - Configure tree display in a settings window.
 - Show post text teaser and tooltip.
@@ -32,5 +34,6 @@ attachments, and inline action buttons.
 Feature descriptions, examples, screenshots/slides, and feedback forum are available at:
 
 https://treek.support
+
 
 

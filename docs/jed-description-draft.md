@@ -29,11 +29,21 @@ topic monitoring, draggable settings, save and restore settings, subject suffixe
 attachments, and inline action buttons.
 
 
+## TreeK Pro
+
+TreeK Pro is available by request via the project site:
+
+**https://treek.support**
+
+Use the contact form on the project site to ask the developer about TreeK Pro, licensing, payment, and installation.
+
 ## Project Site
 
-Feature descriptions, examples, screenshots/slides, and feedback forum are available at:
+Feature descriptions, examples, screenshots/slides, and public feedback forum are available at:
 
 https://treek.support
+
+For private TreeK Pro requests, use the contact form on the project site.
 
 
 

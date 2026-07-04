@@ -36,16 +36,21 @@ $category = isset($this->category) ? $this->category : $message->getCategory();
 $config   = isset($this->config) ? $this->config : KunenaFactory::getConfig();
 $me       = isset($this->me) ? $this->me : KunenaUserHelper::getMyself();
 $template = KunenaTemplate::getInstance();
+$subjectSuffixEnabled = false;
+// TREEK-PRO-START: subject_suffix
 $subjectSuffixEnabled = $template->treekFeature('subject_suffix');
+// TREEK-PRO-END: subject_suffix
 $replyFormTreekLookEnabled = $template->treekFeature('reply_form_treek_look');
 
 $this->addScriptOptions('com_kunena.kunena_topicicontype', '');
 
 $this->addScript('assets/js/quickreply.js');
 
+// TREEK-PRO-START: subject_suffix
 if ($subjectSuffixEnabled) {
     $this->addScript('assets/js/treek_subject.js');
 }
+// TREEK-PRO-END: subject_suffix
 
 if (KunenaFactory::getTemplate()->params->get('formRecover')) {
     $this->addScript('sisyphus.js');

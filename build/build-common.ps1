@@ -64,6 +64,25 @@ function Set-PackageUpdateServer {
     Set-Content -LiteralPath $ManifestPath -Value $content -Encoding utf8
 }
 
+function Remove-FreeProOnlyFiles {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $BuildSourceRoot
+    )
+
+    $proOnlyFiles = @(
+        'kunena-template\treek\assets\js\treek_subject.js'
+    )
+
+    foreach ($relativePath in $proOnlyFiles) {
+        $path = Join-Path $BuildSourceRoot $relativePath
+
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+}
+
 function Assert-ZipHasEntry {
     param(
         [Parameter(Mandatory = $true)]
@@ -211,6 +230,7 @@ try {
     if ($Edition -eq 'Free') {
         $buildSourceRoot = Join-Path $tempRoot 'src-free'
         & (Join-Path $toolsRoot 'strip-pro-blocks.ps1') -SourceRoot $sourceRoot -DestinationRoot $buildSourceRoot
+        Remove-FreeProOnlyFiles -BuildSourceRoot $buildSourceRoot
     }
 
     $packageSource = Resolve-ExistingPath -Path (Join-Path $buildSourceRoot 'package') -Description 'Package source directory' -PathType Container

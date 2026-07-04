@@ -27,7 +27,10 @@ use Kunena\Forum\Libraries\User\KunenaUserHelper;
 
 $message  = $this->message;
 $template = KunenaTemplate::getInstance();
+$subjectSuffixEnabled = false;
+// TREEK-PRO-START: subject_suffix
 $subjectSuffixEnabled = $template->treekFeature('subject_suffix');
+// TREEK-PRO-END: subject_suffix
 $replyFormTreekLookEnabled = $template->treekFeature('reply_form_treek_look');
 
 if (!$message->isAuthorised('reply')) {
@@ -45,9 +48,11 @@ $this->addScriptOptions('com_kunena.kunena_quickreplymesid', $message->displayFi
 
 $this->addScript('assets/js/edit.js');
 
+// TREEK-PRO-START: subject_suffix
 if ($subjectSuffixEnabled) {
     $this->addScript('assets/js/treek_subject.js');
 }
+// TREEK-PRO-END: subject_suffix
 
 if (KunenaFactory::getTemplate()->params->get('formRecover')) {
     $this->addScript('sisyphus.js');

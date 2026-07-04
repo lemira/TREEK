@@ -30,7 +30,10 @@ use Kunena\Forum\Libraries\User\KunenaUserHelper;
 HTMLHelper::_('behavior.formvalidator');
 HTMLHelper::_('behavior.keepalive');
 
+$subjectSuffixEnabled = false;
+// TREEK-PRO-START: subject_suffix
 $subjectSuffixEnabled = $this->ktemplate->treekFeature('subject_suffix');
+// TREEK-PRO-END: subject_suffix
 $replyFormTreekLookEnabled = $this->ktemplate->treekFeature('reply_form_treek_look');
 
 // Add assets
@@ -48,9 +51,11 @@ $this->wa->registerAndUseStyle('fileupload', 'media/kunena/core/css/fileupload.c
     ->registerAndUseScript('upload.main', 'media/kunena/core/js/upload.main.js')
     ->registerAndUseScript('edit', 'components/com_kunena/template/treek/assets/js/edit.js');
 
+// TREEK-PRO-START: subject_suffix
 if ($subjectSuffixEnabled) {
     $this->wa->registerAndUseScript('treek_subject', 'components/com_kunena/template/treek/assets/js/treek_subject.js');
 }
+// TREEK-PRO-END: subject_suffix
 
 // If polls are enabled, load also poll JavaScript.
 if ($this->config->pollEnabled) {

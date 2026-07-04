@@ -24,7 +24,6 @@ class Pkg_TreekInstallerScript extends InstallerScript
         'kunena_template_source' => 'treek_resources/kunena_template/treek',
         'kunena_template_target' => 'components/com_kunena/template/treek',
         'backup_folder' => 'administrator/components/com_kunena/treek_backup',
-        'language_fragment_pattern' => 'language_*_com_kunena_add-treek.ini',
         'overrides' => [
             [
                 'source' => 'components_com_kunena_src_Controllers_TopicController.php',
@@ -286,57 +285,8 @@ public function uninstall($parent)
             }
         }
 
-        $this->installLanguageFragments($sourceBase);
-        
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_OVERRIDES_INSTALLED'), 'success');
         return true;
-    }
-
-    protected function installLanguageFragments(string $sourceBase): void
-    {
-        $pattern = $sourceBase . '/' . $this->paths['language_fragment_pattern'];
-        $fragments = glob($pattern) ?: [];
-
-        foreach ($fragments as $source) {
-            $sourceName = basename($source);
-
-            if (!preg_match('/^language_([^_]+)_com_kunena_add-treek\.ini$/', $sourceName, $matches)) {
-                $this->log('Некорректное имя языкового фрагмента: ' . $sourceName, Log::WARNING);
-                continue;
-            }
-
-            $languageTag = $matches[1];
-            $targetRelative = 'language/' . $languageTag . '/com_kunena.ini';
-            $target = JPATH_ROOT . '/' . $targetRelative;
-
-            if (!File::exists($target)) {
-                $this->log('Языковой файл Kunena не найден, фрагмент пропущен: ' . $targetRelative, Log::WARNING);
-                continue;
-            }
-
-            $this->backupTargetFile($target, $targetRelative);
-
-            $original = file_get_contents($target);
-            $fragment = trim((string) file_get_contents($source));
-
-            if ($fragment === '') {
-                $this->log('Пустой языковой фрагмент пропущен: ' . $sourceName, Log::WARNING);
-                continue;
-            }
-
-            $content = rtrim((string) $original) . "\n\n"
-                . '; BEGIN TREEK LANGUAGE ADDITIONS' . "\n"
-                . $fragment . "\n"
-                . '; END TREEK LANGUAGE ADDITIONS' . "\n";
-
-            if (file_put_contents($target, $content) === false) {
-                $msg = Text::sprintf('PKG_TREEK_ERROR_FILE_COPY', $targetRelative);
-                Factory::getApplication()->enqueueMessage($msg, 'error');
-                $this->log($msg, Log::ERROR);
-            } else {
-                $this->log('Языковой фрагмент добавлен: ' . $targetRelative);
-            }
-        }
     }
 
     protected function backupTargetFile(string $target, string $targetRelative): void
@@ -382,29 +332,7 @@ public function uninstall($parent)
             }
         }
 
-        $this->restoreLanguageFragmentBackups($backupPath);
-        
         return true;
-    }
-
-    protected function restoreLanguageFragmentBackups(string $backupPath): void
-    {
-        $backupPattern = $backupPath . '/language_*_com_kunena.ini';
-        $backups = glob($backupPattern) ?: [];
-
-        foreach ($backups as $backupFile) {
-            $backupName = basename($backupFile);
-
-            if (!preg_match('/^language_([^_]+)_com_kunena\.ini$/', $backupName, $matches)) {
-                continue;
-            }
-
-            $target = JPATH_ROOT . '/language/' . $matches[1] . '/com_kunena.ini';
-            
-            $this->log('Восстановление языкового файла Kunena: ' . $target);
-            File::copy($backupFile, $target);
-            File::delete($backupFile);
-        }
     }
 
     protected function removeKunenaTemplate()

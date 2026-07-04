@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<updates>
+    <update>
+        <name>TreeK</name>
+        <description>TreeK Free package for Kunena Forum.</description>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0</version>
+        <infourl title="TreeK Project">https://treek.support</infourl>
+        <downloads>
+            <downloadurl type="full" format="zip">https://github.com/lemira/TREEK/releases/download/v2.0.0-free/pkg_treek_free.zip</downloadurl>
+        </downloads>
+        <tags>
+            <tag>stable</tag>
+        </tags>
+        <maintainer>Leonid Ratner</maintainer>
+        <maintainerurl>https://treek.support</maintainerurl>
+        <targetplatform name="joomla" version="6.*" />
+    </update>
+</updates>
+

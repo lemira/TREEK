@@ -2,10 +2,12 @@
 <extension type="package" version="4.0" method="upgrade">
     <name>TreeK</name>
     <packagename>treek</packagename>
-    <version>1.0.0</version>
-    <creationDate>2026-05-06</creationDate>
+    <version>2.0</version>
+    <creationDate>2026-07-03</creationDate>
     <author>Leonid Ratner</author>
     <authorEmail>lemirat@gmail.com</authorEmail>
+    <copyright>Copyright (C) 2026 Leonid Ratner. All rights reserved.</copyright>
+    <license>GNU General Public License v3.0</license>
     <description>PKG_TREEK_DESCRIPTION</description>
     
     <scriptfile>treek_install_script.php</scriptfile>
@@ -23,5 +25,9 @@
     <language tag="de-DE" client="administrator">de-DE/pkg_treek.ini</language>
     <language tag="de-DE" client="administrator">de-DE/pkg_treek.sys.ini</language>
 </languages>
+
+    <updateservers>
+        <server type="extension" priority="1" name="TreeK Free Updates">https://raw.githubusercontent.com/lemira/TREEK/main/updates/treek-free.xml</server>
+    </updateservers>
 
 </extension>

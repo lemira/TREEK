@@ -796,7 +796,7 @@ class TopicController extends KunenaController
         $message->removeAttachments(array_keys(array_diff_key($attachments, $attachment)));
 
         // Upload new attachments
-        foreach ($_FILES as $key => $file) {
+        foreach ($this->app->getInput()->files->getArray() as $key => $file) {
             $intkey = 0;
 
             if (preg_match('/\D*(\d+)/', $key, $matches)) {
@@ -1342,7 +1342,7 @@ class TopicController extends KunenaController
         $message->removeAttachments($removeList);
 
         // Upload new attachments
-        foreach ($_FILES as $key => $file) {
+        foreach ($this->app->getInput()->files->getArray() as $key => $file) {
             $intkey = 0;
 
             if (preg_match('/\D*(\d+)/', $key, $matches)) {

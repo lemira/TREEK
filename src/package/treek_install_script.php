@@ -1,4 +1,11 @@
 <?php
+/**
+ * @package      TreeK
+ * @subpackage   Package
+ * @copyright    Copyright (C) 2026 Leonid Ratner. All rights reserved.
+ * @license      GNU General Public License v3.0
+ */
+
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Installer\InstallerScript;

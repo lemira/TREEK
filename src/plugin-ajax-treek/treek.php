@@ -687,7 +687,7 @@ class PlgAjaxTreek extends CMSPlugin
 
     private function getRequestTokenName(): string
     {
-        foreach ($_GET as $key => $value) {
+        foreach ($this->app->getInput()->getArray() as $key => $value) {
             if ((string) $value === '1' && preg_match('/^[a-f0-9]{32}$/i', (string) $key)) {
                 return (string) $key;
             }

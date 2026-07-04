@@ -154,7 +154,7 @@ if (!empty($this->spacing)) : ?>
                         data-topic-id="<?php echo $treekTopicId; ?>"
                         data-token="<?php echo $treekToken; ?>"
                         data-topic-url="<?php echo $this->escape($treekTopicUrl); ?>"
-                        title="Показать дерево постов темы">
+                        title="<?php echo Text::_('TREEK_SHOW_TREE_TOOLTIP'); ?>">
                     <span class="repliesnum"><?php echo $this->formatLargeNumber($repliesCount); ?></span>
                 </button>
             <?php else : ?>

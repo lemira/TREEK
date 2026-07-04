@@ -69,6 +69,7 @@ const fallbackLangs = {
     TREEK_PARAMS_RESTORED: 'Settings restored',
     TREEK_EXPORT_SYMBOL: 'Export',
     TREEK_EXPORT_SYMBOL_TITLE: 'Export tree',
+    TREEK_EXPORT_ACTION: 'Export',
     // TREEK-PRO-START: export_bbcode_html
     TREEK_EXPORT_BBCODE: 'BBCode',
     TREEK_EXPORT_HTML: 'HTML',
@@ -89,7 +90,10 @@ const fallbackLangs = {
     TREEK_SET_SUBJECT_SUFFIX: 'Suffixes',
     TREEK_SET_ATTACHMENTS_TOGGLE: 'Collapsed attachments',
     TREEK_SET_INLINE_ACTION_BUTTONS: '3 action buttons',
-    TREEK_SET_FORUM_VIEW_REFRESH_NOTE: 'After changing Forum view settings, refresh the page.'
+    TREEK_SET_FORUM_VIEW_REFRESH_NOTE: 'After changing Forum view settings, refresh the page.',
+    TREEK_SET_BUTTON_SYMBOL_TOOLTIPS: 'Tooltips for buttons and symbols',
+    TREEK_SET_SETTINGS_DRAG: 'Draggable settings window',
+    TREEK_SET_TOPIC_LIVE_NOTICE: 'Topic watch. Notice when a post is added to the topic'
 };
 
     const defaultState = {
@@ -478,7 +482,12 @@ function renderFreeProPreviewHtml() {
                 _('TREEK_SET_ATTACHMENTS_TOGGLE'),
                 _('TREEK_SET_INLINE_ACTION_BUTTONS')
             ].join(' / ')
-        )
+        ),
+        renderLockedProOption(_('TREEK_SET_BUTTON_SYMBOL_TOOLTIPS')),
+        renderLockedProOption(_('TREEK_SET_SETTINGS_DRAG')),
+        renderLockedProOption(_('TREEK_SET_TOPIC_LIVE_NOTICE')),
+        renderLockedProOption(`${_('TREEK_EXPORT_ACTION')} ${_('TREEK_EXPORT_BBCODE')}`),
+        renderLockedProOption(`${_('TREEK_EXPORT_ACTION')} ${_('TREEK_EXPORT_HTML')}`)
     ].join('');
 
     return `

@@ -30,6 +30,40 @@ function Resolve-ExistingPath {
     return (Resolve-Path -LiteralPath $Path).Path
 }
 
+function Set-PackageUpdateServer {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $ManifestPath,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Free', 'Pro')]
+        [string] $Edition
+    )
+
+    $serverName = if ($Edition -eq 'Free') { 'TreeK Free Updates' } else { 'TreeK Pro Updates' }
+    $serverUrl = if ($Edition -eq 'Free') {
+        'https://raw.githubusercontent.com/lemira/TREEK/main/updates/treek-free.xml'
+    } else {
+        'https://treek.support/updates/treek-pro.xml'
+    }
+
+    $updateservers = @"
+    <updateservers>
+        <server type="extension" priority="1" name="$serverName">$serverUrl</server>
+    </updateservers>
+"@
+
+    $content = Get-Content -LiteralPath $ManifestPath -Raw
+
+    if ($content -match '(?s)\s*<updateservers>.*?</updateservers>') {
+        $content = [regex]::Replace($content, '(?s)\s*<updateservers>.*?</updateservers>', "`r`n$updateservers", 1)
+    } else {
+        $content = $content -replace '\s*</extension>\s*$', "`r`n$updateservers`r`n`r`n</extension>`r`n"
+    }
+
+    Set-Content -LiteralPath $ManifestPath -Value $content -Encoding utf8
+}
+
 function Assert-ZipHasEntry {
     param(
         [Parameter(Mandatory = $true)]
@@ -188,7 +222,9 @@ try {
     $tempPackage = Join-Path $tempRoot 'pkg_treek'
     New-Item -ItemType Directory -Path $tempPackage | Out-Null
 
-    Copy-Item -LiteralPath (Join-Path $packageSource 'pkg_treek.xml') -Destination $tempPackage -Force
+    $tempPackageManifest = Join-Path $tempPackage 'pkg_treek.xml'
+    Copy-Item -LiteralPath (Join-Path $packageSource 'pkg_treek.xml') -Destination $tempPackageManifest -Force
+    Set-PackageUpdateServer -ManifestPath $tempPackageManifest -Edition $Edition
     Copy-Item -LiteralPath (Join-Path $packageSource 'treek_install_script.php') -Destination $tempPackage -Force
     Copy-Item -LiteralPath (Join-Path $packageSource 'language') -Destination $tempPackage -Recurse -Force
 

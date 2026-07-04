@@ -174,6 +174,9 @@ class TopicFormReplyDisplay extends KunenaControllerDisplay
         ]);
         $this->app->getDispatcher()->dispatch('onKunenaPrepare', $prepareEvent);
 
+// TreeK patch v1.0: load template language before using TreeK-specific Kunena keys.
+$this->ktemplate->loadLanguage();
+
        // TreeK patch v1.0: headerText with HTML for display, headerTextPlain for meta tags
 $this->headerText = Text::sprintf('COM_KUNENA_REPLYTO_HEADER_TREEK',
     $parent->getAuthor()->getLink(),

@@ -31,7 +31,11 @@ The Free edition does not contain Pro implementation code.
 TreeK Free will be published through GitHub Releases and the Joomla Extensions
 Directory.
 
-TreeK Pro is distributed separately. Details will be published at:
+TreeK Pro is distributed separately. It can be fully tested on the project site, for example in this forum topic:
+
+https://treek.support/index.php/forum/examples-of-trees-on-forums/1-example-of-tree
+
+Details and Pro requests are available at:
 
 https://treek.support
 
@@ -74,5 +78,6 @@ If you like this project, you can make a donation via PayPal:
 
 TreeK Free is distributed under the GNU General Public License v3.0. See
 [LICENSE](LICENSE).
+
 
 

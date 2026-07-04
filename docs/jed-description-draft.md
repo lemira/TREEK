@@ -31,6 +31,10 @@ attachments, and inline action buttons.
 
 ## TreeK Pro
 
+TreeK Pro can be fully tested on the project site, for example in this forum topic:
+
+https://treek.support/index.php/forum/examples-of-trees-on-forums/1-example-of-tree
+
 TreeK Pro is available by request via the project site:
 
 **https://treek.support**
@@ -44,6 +48,7 @@ Feature descriptions, examples, screenshots/slides, and public feedback forum ar
 https://treek.support
 
 For private TreeK Pro requests, use the contact form on the project site.
+
 
 
 

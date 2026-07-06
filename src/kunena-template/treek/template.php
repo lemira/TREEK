@@ -26,8 +26,6 @@ use Joomla\CMS\Session\Session;
  */
 class KunenaTemplatetreek extends KunenaTemplate
 {
-    private const USER_PARAMS_CONTEXT_DEFAULT = 'default';
-
     private ?array $treekViewFeatures = null;
 
     protected $default = ['treek'];
@@ -241,8 +239,7 @@ EOF;
             $query = $db->getQuery(true)
                 ->select($db->quoteName('settings'))
                 ->from($db->quoteName('#__treek_user_parameters'))
-                ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
-                ->where($db->quoteName('context') . ' = ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT));
+                ->where($db->quoteName('user_id') . ' = ' . (int) $userId);
 
             $db->setQuery($query);
             $json = (string) $db->loadResult();

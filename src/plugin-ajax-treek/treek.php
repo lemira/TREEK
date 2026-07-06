@@ -19,9 +19,6 @@ use Treek\Plugin\Ajax\Treek\Model\TreekModel;
 
 class PlgAjaxTreek extends CMSPlugin
 {
-    private const USER_PARAMS_CONTEXT_DEFAULT = 'default';
-    private const USER_PARAMS_CONTEXT_TREEK_VIEW = 'treek_view';
-
     public function __construct(&$subject, $config = [])
     {
         parent::__construct($subject, $config);
@@ -94,33 +91,29 @@ class PlgAjaxTreek extends CMSPlugin
             $payload = json_decode((string) file_get_contents('php://input'), true);
             $payload = is_array($payload) ? $payload : [];
             $settings = is_array($payload['settings'] ?? null) ? $payload['settings'] : [];
-            $context = $this->getUserParametersContext((string) ($payload['context'] ?? self::USER_PARAMS_CONTEXT_DEFAULT));
-            $filteredSettings = $this->filterUserSettings($settings, $context);
+            $filteredSettings = $this->filterUserSettings($settings);
 
-            $this->saveUserParameters($userId, $filteredSettings, $context);
-            $savedSettings = $this->loadUserParameters($userId, $context);
+            $this->saveUserParameters($userId, $filteredSettings);
+            $savedSettings = $this->loadUserParameters($userId);
 
             if ($savedSettings === null) {
                 $this->debugAjaxLog('params_save_verify_failed', [
                     'topic_id' => $topicId,
                     'user_id' => $userId,
-                    'context' => $context,
                 ]);
 
-                $this->sendJson(['error' => 'Unable to verify saved parameters: ' . $context]);
+                $this->sendJson(['error' => 'Unable to verify saved parameters']);
                 return;
             }
 
             $this->debugAjaxLog('params_saved', [
                 'topic_id' => $topicId,
                 'user_id' => $userId,
-                'context' => $context,
                 'verified' => '1',
             ]);
 
             $this->sendJson([
                 'success' => true,
-                'context' => $context,
                 'verified' => true,
                 'settings' => $savedSettings,
                 'userParams' => [
@@ -145,14 +138,12 @@ class PlgAjaxTreek extends CMSPlugin
                 return;
             }
 
-            $context = $this->getUserParametersContext($app->input->getCmd('context', self::USER_PARAMS_CONTEXT_DEFAULT));
-            $settings = $this->loadUserParameters($userId, $context);
+            $settings = $this->loadUserParameters($userId);
 
             if ($settings === null) {
                 $this->debugAjaxLog('params_restore_empty', [
                     'topic_id' => $topicId,
                     'user_id' => $userId,
-                    'context' => $context,
                 ]);
 
                 $this->sendJson(['error' => 'No saved parameters']);
@@ -162,7 +153,6 @@ class PlgAjaxTreek extends CMSPlugin
             $this->debugAjaxLog('params_restored', [
                 'topic_id' => $topicId,
                 'user_id' => $userId,
-                'context' => $context,
             ]);
 
             $this->sendJson([
@@ -381,7 +371,7 @@ class PlgAjaxTreek extends CMSPlugin
         }
     }
 
-    private function hasUserParameters(int $userId, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): bool
+    private function hasUserParameters(int $userId): bool
     {
         $db = Factory::getContainer()->get('DatabaseDriver');
         $this->ensureUserParametersTable();
@@ -389,8 +379,7 @@ class PlgAjaxTreek extends CMSPlugin
         $query = $db->getQuery(true)
             ->select('COUNT(*)')
             ->from($db->quoteName('#__treek_user_parameters'))
-            ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
-            ->where($db->quoteName('context') . ' = ' . $db->quote($context));
+            ->where($db->quoteName('user_id') . ' = ' . (int) $userId);
 
         $db->setQuery($query);
 
@@ -418,7 +407,7 @@ class PlgAjaxTreek extends CMSPlugin
         ];
     }
 
-    private function loadUserParameters(int $userId, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): ?array
+    private function loadUserParameters(int $userId): ?array
     {
         $db = Factory::getContainer()->get('DatabaseDriver');
         $this->ensureUserParametersTable();
@@ -426,8 +415,7 @@ class PlgAjaxTreek extends CMSPlugin
         $query = $db->getQuery(true)
             ->select($db->quoteName('settings'))
             ->from($db->quoteName('#__treek_user_parameters'))
-            ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
-            ->where($db->quoteName('context') . ' = ' . $db->quote($context));
+            ->where($db->quoteName('user_id') . ' = ' . (int) $userId);
 
         $db->setQuery($query);
         $json = (string) $db->loadResult();
@@ -438,10 +426,10 @@ class PlgAjaxTreek extends CMSPlugin
 
         $settings = json_decode($json, true);
 
-        return is_array($settings) ? $this->filterUserSettings($settings, $context) : null;
+        return is_array($settings) ? $this->filterUserSettings($settings) : null;
     }
 
-    private function saveUserParameters(int $userId, array $settings, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): void
+    private function saveUserParameters(int $userId, array $settings): void
     {
         $db = Factory::getContainer()->get('DatabaseDriver');
         $this->ensureUserParametersTable();
@@ -450,10 +438,9 @@ class PlgAjaxTreek extends CMSPlugin
 
         $query = $db->getQuery(true)
             ->insert($db->quoteName('#__treek_user_parameters'))
-            ->columns($db->quoteName(['user_id', 'context', 'settings', 'created_at', 'updated_at']))
+            ->columns($db->quoteName(['user_id', 'settings', 'created_at', 'updated_at']))
             ->values(implode(',', [
                 (int) $userId,
-                $db->quote($context),
                 $db->quote($json),
                 $db->quote($now),
                 $db->quote($now),
@@ -481,7 +468,6 @@ class PlgAjaxTreek extends CMSPlugin
             CREATE TABLE IF NOT EXISTS " . $db->quoteName('#__treek_user_parameters') . " (
                 " . $db->quoteName('id') . " int unsigned NOT NULL AUTO_INCREMENT,
                 " . $db->quoteName('user_id') . " int unsigned NOT NULL,
-                " . $db->quoteName('context') . " varchar(64) NOT NULL DEFAULT 'default',
                 " . $db->quoteName('settings') . " mediumtext NOT NULL,
                 " . $db->quoteName('created_at') . " datetime NOT NULL,
                 " . $db->quoteName('updated_at') . " datetime NOT NULL,
@@ -495,18 +481,6 @@ class PlgAjaxTreek extends CMSPlugin
 
         $tableName = $db->replacePrefix('#__treek_user_parameters');
 
-        $db->setQuery('SHOW COLUMNS FROM ' . $db->quoteName($tableName) . ' LIKE ' . $db->quote('context'));
-
-        if (!$db->loadAssoc()) {
-            $db->setQuery(
-                'ALTER TABLE ' . $db->quoteName($tableName)
-                . ' ADD ' . $db->quoteName('context') . " varchar(64) NOT NULL DEFAULT 'default' AFTER "
-                . $db->quoteName('user_id')
-            );
-            $db->execute();
-        }
-
-        $this->mergeTreekViewUserParameterRows($db, $tableName);
         $this->removeDuplicateUserParameterRows($db, $tableName);
 
         $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
@@ -551,6 +525,13 @@ class PlgAjaxTreek extends CMSPlugin
             $db->execute();
         }
 
+        $db->setQuery('SHOW COLUMNS FROM ' . $db->quoteName($tableName) . ' LIKE ' . $db->quote('context'));
+
+        if ($db->loadAssoc()) {
+            $db->setQuery('ALTER TABLE ' . $db->quoteName($tableName) . ' DROP COLUMN ' . $db->quoteName('context'));
+            $db->execute();
+        }
+
         $done = true;
     }
 
@@ -567,90 +548,7 @@ class PlgAjaxTreek extends CMSPlugin
         $db->execute();
     }
 
-    private function mergeTreekViewUserParameterRows($db, string $tableName): void
-    {
-        $table = $db->quoteName($tableName);
-
-        $query = $db->getQuery(true)
-            ->select($db->quoteName(['id', 'user_id', 'context', 'settings']))
-            ->from($table)
-            ->where($db->quoteName('context') . ' IN (' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT) . ', ' . $db->quote(self::USER_PARAMS_CONTEXT_TREEK_VIEW) . ')')
-            ->order($db->quoteName('user_id') . ' ASC, ' . $db->quoteName('id') . ' ASC');
-
-        $db->setQuery($query);
-        $rows = (array) $db->loadAssocList();
-        $byUser = [];
-
-        foreach ($rows as $row) {
-            $byUser[(int) ($row['user_id'] ?? 0)][] = $row;
-        }
-
-        foreach ($byUser as $userId => $userRows) {
-            if ($userId <= 0) {
-                continue;
-            }
-
-            $defaultRow = null;
-            $treekViewRow = null;
-
-            foreach ($userRows as $row) {
-                $context = (string) ($row['context'] ?? self::USER_PARAMS_CONTEXT_DEFAULT);
-
-                if ($context === self::USER_PARAMS_CONTEXT_DEFAULT) {
-                    $defaultRow = $row;
-                } elseif ($context === self::USER_PARAMS_CONTEXT_TREEK_VIEW) {
-                    $treekViewRow = $row;
-                }
-            }
-
-            if (!$treekViewRow) {
-                continue;
-            }
-
-            $defaultSettings = [];
-
-            if ($defaultRow) {
-                $decodedDefault = json_decode((string) ($defaultRow['settings'] ?? ''), true);
-                $defaultSettings = is_array($decodedDefault) ? $decodedDefault : [];
-            }
-
-            $decodedTreekView = json_decode((string) ($treekViewRow['settings'] ?? ''), true);
-
-            if (is_array($decodedTreekView)) {
-                $defaultSettings['treekViewFeatures'] = $this->filterTreekViewSettings($decodedTreekView);
-            }
-
-            $now = Factory::getDate()->toSql();
-            $json = json_encode($this->filterTreeSettings($defaultSettings), JSON_UNESCAPED_UNICODE);
-
-            if ($defaultRow) {
-                $query = $db->getQuery(true)
-                    ->update($table)
-                    ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
-                    ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
-                    ->where($db->quoteName('id') . ' = ' . (int) $defaultRow['id']);
-            } else {
-                $query = $db->getQuery(true)
-                    ->update($table)
-                    ->set($db->quoteName('context') . ' = ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT))
-                    ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
-                    ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
-                    ->where($db->quoteName('id') . ' = ' . (int) $treekViewRow['id']);
-            }
-
-            $db->setQuery($query);
-            $db->execute();
-        }
-
-        $query = $db->getQuery(true)
-            ->delete($table)
-            ->where($db->quoteName('context') . ' <> ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT));
-
-        $db->setQuery($query);
-        $db->execute();
-    }
-
-    private function filterUserSettings(array $settings, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): array
+    private function filterUserSettings(array $settings): array
     {
         return $this->filterTreeSettings($settings);
     }
@@ -755,11 +653,6 @@ class PlgAjaxTreek extends CMSPlugin
         }
 
         return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
-    }
-
-    private function getUserParametersContext(string $context): string
-    {
-        return self::USER_PARAMS_CONTEXT_DEFAULT;
     }
 
     private function getRequestTokenName(): string

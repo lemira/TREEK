@@ -1377,14 +1377,13 @@ function exportTreeToClipboard(format) {
         if (restoreBtn) restoreBtn.style.display = (userParams.canSave && userParams.hasSaved) ? 'inline-block' : 'none';
     }
 
-    function fetchUserParamsTask(task, payload = null, context = 'default', allowTokenRefresh = true) {
+    function fetchUserParamsTask(task, payload = null, allowTokenRefresh = true) {
         if (!currentPopover || !currentTrigger) {
             return Promise.reject(new Error(_('TREEK_ERROR_REFRESH_TREE')));
         }
 
         const topicId = currentPopover.dataset.topicId;
         const token = currentTrigger.getAttribute('data-token');
-        const contextParam = context ? `&context=${encodeURIComponent(context)}` : '';
         const options = {
             headers: {
                 'Accept': 'application/json'
@@ -1398,13 +1397,13 @@ function exportTreeToClipboard(format) {
             options.body = JSON.stringify(payload);
         }
 
-        return fetch(`${AJAX_URL}&task=${task}&topic_id=${topicId}${contextParam}&${token}=1`, options)
+        return fetch(`${AJAX_URL}&task=${task}&topic_id=${topicId}&${token}=1`, options)
             .then(parseAjaxJsonResponse)
             .then(data => {
                 if (isTokenError(data.error) && allowTokenRefresh) {
                     return fetchFreshToken().then(freshToken => {
                         currentTrigger.setAttribute('data-token', freshToken);
-                        return fetchUserParamsTask(task, payload, context, false);
+                        return fetchUserParamsTask(task, payload, false);
                     });
                 }
 
@@ -1496,7 +1495,7 @@ function exportTreeToClipboard(format) {
                     updateUserParamsButtons();
                 })
                 .catch(err => {
-                    console.warn('TREEK treek_view autosave failed', err);
+                    console.warn('TREEK forum view autosave failed', err);
                 });
         }, 500);
     }

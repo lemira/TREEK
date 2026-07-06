@@ -413,16 +413,6 @@
     font-size: 11px !important;
 }
 
-.treek-forum-view-note {
-    margin-top: 8px !important;
-    padding: 6px 8px !important;
-    border-left: 3px solid #d7a43b !important;
-    background: #fff8e6 !important;
-    color: #6f5500 !important;
-    font-size: 11px !important;
-    line-height: 1.35 !important;
-}
-
 .treek-row__tab {
     display: inline-block !important;
     flex: 0 0 auto !important;

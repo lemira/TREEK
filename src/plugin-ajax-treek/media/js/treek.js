@@ -90,7 +90,6 @@ const fallbackLangs = {
     TREEK_SET_SUBJECT_SUFFIX: 'Suffixes',
     TREEK_SET_ATTACHMENTS_TOGGLE: 'Collapsed attachments',
     TREEK_SET_INLINE_ACTION_BUTTONS: '3 action buttons',
-    TREEK_SET_FORUM_VIEW_REFRESH_NOTE: 'After changing Forum view settings, refresh the page.',
     TREEK_SET_BUTTON_SYMBOL_TOOLTIPS: 'Tooltips for buttons and symbols',
     TREEK_SET_SETTINGS_DRAG: 'Draggable settings window',
     TREEK_SET_TOPIC_LIVE_NOTICE: 'Topic watch. Notice when a post is added to the topic'
@@ -1003,7 +1002,6 @@ ${renderInlineLockedProOption(_('TREEK_SET_COMFORT_TOOLS'), _('TREEK_SET_NAV_TOO
         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_subject_suffix" ${treekViewFeatures.subject_suffix ? 'checked' : ''}> ${_('TREEK_SET_SUBJECT_SUFFIX')}</label>
         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_attachments_toggle" ${treekViewFeatures.attachments_toggle ? 'checked' : ''}> ${_('TREEK_SET_ATTACHMENTS_TOGGLE')}</label>
         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_inline_action_buttons" ${treekViewFeatures.inline_action_buttons ? 'checked' : ''}> ${_('TREEK_SET_INLINE_ACTION_BUTTONS')}</label>
-        <div class="treek-forum-view-note">${_('TREEK_SET_FORUM_VIEW_REFRESH_NOTE')}</div>
     </div>
 </div>
 <!-- TREEK-PRO-END: treek_view_settings -->
@@ -1493,6 +1491,7 @@ function exportTreeToClipboard(format) {
                     );
 
                     updateUserParamsButtons();
+                    window.location.reload();
                 })
                 .catch(err => {
                     console.warn('TREEK forum view autosave failed', err);

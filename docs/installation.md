@@ -13,7 +13,7 @@ TreeK is installed as a Joomla package.
 1. Download the latest TreeK Free package from GitHub Releases.
 2. In Joomla Administrator, open **System -> Install -> Extensions**.
 3. Upload and install the TreeK package ZIP.
-4. Open **System -> Plugins** and make sure the TreeK AJAX plugin is enabled.
+4. In **Extensions: Manage**, enable the **Treek - Add-on for Kunena Forum** plugin.
 5. Open **Kunena -> Templates** and activate the TreeK template.
 
 ## After Installation

@@ -448,33 +448,20 @@ class PlgAjaxTreek extends CMSPlugin
         $now = Factory::getDate()->toSql();
         $json = json_encode($settings, JSON_UNESCAPED_UNICODE);
 
-        $select = $db->getQuery(true)
-            ->select($db->quoteName('id'))
-            ->from($db->quoteName('#__treek_user_parameters'))
-            ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
-            ->where($db->quoteName('context') . ' = ' . $db->quote($context));
+        $query = $db->getQuery(true)
+            ->insert($db->quoteName('#__treek_user_parameters'))
+            ->columns($db->quoteName(['user_id', 'context', 'settings', 'created_at', 'updated_at']))
+            ->values(implode(',', [
+                (int) $userId,
+                $db->quote($context),
+                $db->quote($json),
+                $db->quote($now),
+                $db->quote($now),
+            ]));
 
-        $db->setQuery($select);
-        $id = (int) $db->loadResult();
-
-        if ($id > 0) {
-            $query = $db->getQuery(true)
-                ->update($db->quoteName('#__treek_user_parameters'))
-                ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
-                ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
-                ->where($db->quoteName('id') . ' = ' . $id);
-        } else {
-            $query = $db->getQuery(true)
-                ->insert($db->quoteName('#__treek_user_parameters'))
-                ->columns($db->quoteName(['user_id', 'context', 'settings', 'created_at', 'updated_at']))
-                ->values(implode(',', [
-                    (int) $userId,
-                    $db->quote($context),
-                    $db->quote($json),
-                    $db->quote($now),
-                    $db->quote($now),
-                ]));
-        }
+        $query .= ' ON DUPLICATE KEY UPDATE '
+            . $db->quoteName('settings') . ' = VALUES(' . $db->quoteName('settings') . '), '
+            . $db->quoteName('updated_at') . ' = VALUES(' . $db->quoteName('updated_at') . ')';
 
         $db->setQuery($query);
         $db->execute();
@@ -546,6 +533,8 @@ class PlgAjaxTreek extends CMSPlugin
             }
         }
 
+        $this->removeDuplicateUserParameterRows($db, $tableName);
+
         $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
         $indexes = (array) $db->loadAssocList();
         $hasUserContextIndex = false;
@@ -567,6 +556,20 @@ class PlgAjaxTreek extends CMSPlugin
         }
 
         $done = true;
+    }
+
+    private function removeDuplicateUserParameterRows($db, string $tableName): void
+    {
+        $table = $db->quoteName($tableName);
+
+        $query = 'DELETE old_rows FROM ' . $table . ' AS old_rows'
+            . ' INNER JOIN ' . $table . ' AS keep_rows'
+            . ' ON old_rows.' . $db->quoteName('user_id') . ' = keep_rows.' . $db->quoteName('user_id')
+            . ' AND old_rows.' . $db->quoteName('context') . ' = keep_rows.' . $db->quoteName('context')
+            . ' AND old_rows.' . $db->quoteName('id') . ' < keep_rows.' . $db->quoteName('id');
+
+        $db->setQuery($query);
+        $db->execute();
     }
 
     private function filterUserSettings(array $settings, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): array

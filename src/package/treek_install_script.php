@@ -482,6 +482,8 @@ protected function ensureUserParametersTableSchema(string $tableName): void
         }
     }
 
+    $this->removeDuplicateUserParameterRows($tableName);
+
     $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName) . ' WHERE Key_name = ' . $db->quote('idx_user_context'));
 
     if (!$db->loadAssoc()) {
@@ -492,6 +494,21 @@ protected function ensureUserParametersTableSchema(string $tableName): void
         );
         $db->execute();
     }
+}
+
+protected function removeDuplicateUserParameterRows(string $tableName): void
+{
+    $db = Factory::getDbo();
+    $table = $db->quoteName($tableName);
+
+    $query = 'DELETE old_rows FROM ' . $table . ' AS old_rows'
+        . ' INNER JOIN ' . $table . ' AS keep_rows'
+        . ' ON old_rows.' . $db->quoteName('user_id') . ' = keep_rows.' . $db->quoteName('user_id')
+        . ' AND old_rows.' . $db->quoteName('context') . ' = keep_rows.' . $db->quoteName('context')
+        . ' AND old_rows.' . $db->quoteName('id') . ' < keep_rows.' . $db->quoteName('id');
+
+    $db->setQuery($query);
+    $db->execute();
 }
 
 protected function keepUserParametersTable(): void

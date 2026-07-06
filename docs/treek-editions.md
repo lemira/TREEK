@@ -90,3 +90,20 @@ Free может показывать полный список настроек,
 - Pro собирается как полный набор.
 - Общий UI настроек должен уметь рендерить Free-safe disabled-элементы без
   подключения платной реализации.
+
+## TODO
+
+- Сделать edition-aware сообщение installer без изменения имени расширения:
+  `TreeK Free 2.0 installation completed successfully.` и
+  `TreeK Pro 2.0 installation completed successfully.`
+- Перед следующим коммитом public GitHub docs (`W:\Git-treek\TREEK`) поправить:
+  README section `TreeK`: заменить `without leaving the window` на
+  `without leaving the tree window`;
+  README section `Project Site`: заменить `It contains feature descriptions`
+  на `It contains feature descriptions for full (Pro) TreeK Edition`;
+  README section `Repository Scope`: рассмотреть удаление фразы
+  `Free installation packages should be attached to GitHub Releases rather than committed into the repository.`;
+  `docs/free-vs-pro.md`: заменить `The meaning of TreeK options` на
+  `The meaning of all TreeK options`;
+  `docs/free-vs-pro.md`: поставить абзац про meaning/options перед абзацем
+  о полном тестировании TreeK Pro на `treek.support`.

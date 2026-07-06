@@ -1120,7 +1120,7 @@ function activateTreeRow(postId) {
 }
 
     function getPersistableState() {
-        return {
+        const persistable = {
             view: state.view,
             primary: state.primary,
             showTime: state.showTime,
@@ -1135,6 +1135,12 @@ function activateTreeRow(postId) {
             teaserMode: state.teaserMode,
             teaserLen: state.teaserLen
         };
+
+        // TREEK-PRO-START: treek_view_settings
+        persistable.treekViewFeatures = treekViewFeatures;
+        // TREEK-PRO-END: treek_view_settings
+
+        return persistable;
     }
     
     function getExportRows() {
@@ -1409,30 +1415,17 @@ function exportTreeToClipboard(format) {
     }
 
     function saveUserParams() {
-        const saveTree = fetchUserParamsTask('params_save', {
+        return fetchUserParamsTask('params_save', {
             settings: getPersistableState()
-        });
-
-        const saveTreekView = TREEK_EDITION === 'pro'
-            ? fetchUserParamsTask('params_save', {
-                context: 'treek_view',
-                settings: treekViewFeatures
-            }, 'treek_view')
-            : Promise.resolve(null);
-
-        return Promise.all([saveTree, saveTreekView]).then(([data, viewData]) => {
+        }).then(data => {
             cachedData.userParams = Object.assign(
                 {},
                 cachedData.userParams || {},
                 data?.userParams || {},
-                viewData?.userParams || {},
                 {
                     canSave: true,
                     hasSaved: true,
-                    hasSavedTree: true,
-                    hasSavedTreekView: TREEK_EDITION === 'pro'
-                        ? true
-                        : !!(data?.userParams?.hasSavedTreekView || cachedData.userParams?.hasSavedTreekView)
+                    hasSavedTree: true
                 }
             );
 
@@ -1443,34 +1436,18 @@ function exportTreeToClipboard(format) {
     }
 
     function restoreUserParams() {
-        const restoreErrors = [];
-
-        const restoreTree = fetchUserParamsTask('params_restore')
-            .catch(err => {
-                restoreErrors.push(`default: ${err.message}`);
-                return null;
-            });
-
-        const restoreTreekView = TREEK_EDITION === 'pro'
-            ? fetchUserParamsTask('params_restore', null, 'treek_view').catch(err => {
-                restoreErrors.push(`treek_view: ${err.message}`);
-                return null;
-            })
-            : Promise.resolve(null);
-
-        return Promise.all([restoreTree, restoreTreekView]).then(([treeData, viewData]) => {
-            if (!treeData?.settings && !viewData?.settings) {
-                throw new Error(restoreErrors.join('; ') || _('TREEK_PARAMS_RESTORE_ERROR'));
+        return fetchUserParamsTask('params_restore').then(data => {
+            if (!data?.settings) {
+                throw new Error(_('TREEK_PARAMS_RESTORE_ERROR'));
             }
 
-            if (treeData?.settings) {
-                state = Object.assign({}, defaultState, treeData.settings);
-                state.timeFormat = normalizeTimeFormat(state.timeFormat);
-                normalizeEditionState();
-            }
+            state = Object.assign({}, defaultState, data.settings);
+            state.timeFormat = normalizeTimeFormat(state.timeFormat);
+            normalizeEditionState();
 
-            if (viewData?.settings) {
-                treekViewFeatures = normalizeTreekViewFeatures(viewData.settings);
+            // TREEK-PRO-START: treek_view_settings
+            if (data.settings.treekViewFeatures) {
+                treekViewFeatures = normalizeTreekViewFeatures(data.settings.treekViewFeatures);
                 window.treekViewFeatures = treekViewFeatures;
                 {
                     const savedForumViewOpen = loadForumViewOpenState();
@@ -1479,12 +1456,13 @@ function exportTreeToClipboard(format) {
                         : savedForumViewOpen;
                 }
             }
+            // TREEK-PRO-END: treek_view_settings
 
             saveState();
             syncSettingsControls();
             renderContent();
 
-            return treeData || viewData;
+            return data;
         });
     }
 
@@ -1501,9 +1479,8 @@ function exportTreeToClipboard(format) {
             treekViewAutoSaveTimer = null;
 
             fetchUserParamsTask('params_save', {
-                context: 'treek_view',
-                settings: treekViewFeatures
-            }, 'treek_view')
+                settings: getPersistableState()
+            })
                 .then(data => {
                     cachedData.userParams = Object.assign(
                         {},
@@ -1512,7 +1489,7 @@ function exportTreeToClipboard(format) {
                         {
                             canSave: true,
                             hasSaved: true,
-                            hasSavedTreekView: true
+                            hasSavedTree: true
                         }
                     );
 

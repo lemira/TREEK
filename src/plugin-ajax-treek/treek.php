@@ -359,8 +359,9 @@ class PlgAjaxTreek extends CMSPlugin
             $userId = (int) $app->getIdentity()->id;
 
             $tree['userParams'] = $this->getUserParametersStatus($userId);
-            $tree['treekViewFeatures'] = $userId > 0
-                ? ($this->loadUserParameters($userId, self::USER_PARAMS_CONTEXT_TREEK_VIEW) ?? $this->getDefaultTreekViewFeatures())
+            $savedUserSettings = $userId > 0 ? $this->loadUserParameters($userId) : null;
+            $tree['treekViewFeatures'] = is_array($savedUserSettings['treekViewFeatures'] ?? null)
+                ? $savedUserSettings['treekViewFeatures']
                 : $this->getDefaultTreekViewFeatures();
 
             $this->debugAjaxLog('tree_success', [
@@ -407,14 +408,13 @@ class PlgAjaxTreek extends CMSPlugin
             ];
         }
 
-        $hasSavedTree = $this->hasUserParameters($userId, self::USER_PARAMS_CONTEXT_DEFAULT);
-        $hasSavedTreekView = $this->hasUserParameters($userId, self::USER_PARAMS_CONTEXT_TREEK_VIEW);
+        $hasSaved = $this->hasUserParameters($userId);
 
         return [
             'canSave' => true,
-            'hasSaved' => $hasSavedTree || $hasSavedTreekView,
-            'hasSavedTree' => $hasSavedTree,
-            'hasSavedTreekView' => $hasSavedTreekView,
+            'hasSaved' => $hasSaved,
+            'hasSavedTree' => $hasSaved,
+            'hasSavedTreekView' => $hasSaved,
         ];
     }
 
@@ -486,8 +486,7 @@ class PlgAjaxTreek extends CMSPlugin
                 " . $db->quoteName('created_at') . " datetime NOT NULL,
                 " . $db->quoteName('updated_at') . " datetime NOT NULL,
                 PRIMARY KEY (" . $db->quoteName('id') . "),
-                UNIQUE KEY " . $db->quoteName('idx_user_context') . " (" . $db->quoteName('user_id') . ", " . $db->quoteName('context') . "),
-                KEY " . $db->quoteName('idx_user_id') . " (" . $db->quoteName('user_id') . ")
+                UNIQUE KEY " . $db->quoteName('idx_user_id') . " (" . $db->quoteName('user_id') . ")
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci
         ";
 
@@ -507,13 +506,15 @@ class PlgAjaxTreek extends CMSPlugin
             $db->execute();
         }
 
+        $this->mergeTreekViewUserParameterRows($db, $tableName);
+        $this->removeDuplicateUserParameterRows($db, $tableName);
+
         $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
         $indexes = (array) $db->loadAssocList();
         $indexesByName = [];
 
         foreach ($indexes as $index) {
             $name = (string) ($index['Key_name'] ?? '');
-
             if ($name === '' || $name === 'PRIMARY') {
                 continue;
             }
@@ -521,36 +522,31 @@ class PlgAjaxTreek extends CMSPlugin
             $indexesByName[$name][] = $index;
         }
 
+        $hasUniqueUserIndex = false;
+
         foreach ($indexesByName as $name => $parts) {
             usort($parts, static fn($a, $b) => (int) ($a['Seq_in_index'] ?? 0) <=> (int) ($b['Seq_in_index'] ?? 0));
 
             $columns = array_map(static fn($part) => (string) ($part['Column_name'] ?? ''), $parts);
             $isUnique = isset($parts[0]['Non_unique']) && (int) $parts[0]['Non_unique'] === 0;
 
-            if ($isUnique && $columns === ['user_id']) {
+            if ($name === 'idx_user_context' || ($name === 'idx_user_id' && (!$isUnique || $columns !== ['user_id']))) {
                 $db->setQuery('ALTER TABLE ' . $db->quoteName($tableName) . ' DROP INDEX ' . $db->quoteName($name));
                 $db->execute();
+
+                continue;
+            }
+
+            if ($isUnique && $columns === ['user_id']) {
+                $hasUniqueUserIndex = true;
             }
         }
 
-        $this->removeDuplicateUserParameterRows($db, $tableName);
-
-        $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
-        $indexes = (array) $db->loadAssocList();
-        $hasUserContextIndex = false;
-
-        foreach ($indexes as $index) {
-            if ((string) ($index['Key_name'] ?? '') === 'idx_user_context') {
-                $hasUserContextIndex = true;
-                break;
-            }
-        }
-
-        if (!$hasUserContextIndex) {
+        if (!$hasUniqueUserIndex) {
             $db->setQuery(
                 'ALTER TABLE ' . $db->quoteName($tableName)
-                . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_context')
-                . ' (' . $db->quoteName('user_id') . ', ' . $db->quoteName('context') . ')'
+                . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_id')
+                . ' (' . $db->quoteName('user_id') . ')'
             );
             $db->execute();
         }
@@ -565,8 +561,90 @@ class PlgAjaxTreek extends CMSPlugin
         $query = 'DELETE old_rows FROM ' . $table . ' AS old_rows'
             . ' INNER JOIN ' . $table . ' AS keep_rows'
             . ' ON old_rows.' . $db->quoteName('user_id') . ' = keep_rows.' . $db->quoteName('user_id')
-            . ' AND old_rows.' . $db->quoteName('context') . ' = keep_rows.' . $db->quoteName('context')
             . ' AND old_rows.' . $db->quoteName('id') . ' < keep_rows.' . $db->quoteName('id');
+
+        $db->setQuery($query);
+        $db->execute();
+    }
+
+    private function mergeTreekViewUserParameterRows($db, string $tableName): void
+    {
+        $table = $db->quoteName($tableName);
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName(['id', 'user_id', 'context', 'settings']))
+            ->from($table)
+            ->where($db->quoteName('context') . ' IN (' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT) . ', ' . $db->quote(self::USER_PARAMS_CONTEXT_TREEK_VIEW) . ')')
+            ->order($db->quoteName('user_id') . ' ASC, ' . $db->quoteName('id') . ' ASC');
+
+        $db->setQuery($query);
+        $rows = (array) $db->loadAssocList();
+        $byUser = [];
+
+        foreach ($rows as $row) {
+            $byUser[(int) ($row['user_id'] ?? 0)][] = $row;
+        }
+
+        foreach ($byUser as $userId => $userRows) {
+            if ($userId <= 0) {
+                continue;
+            }
+
+            $defaultRow = null;
+            $treekViewRow = null;
+
+            foreach ($userRows as $row) {
+                $context = (string) ($row['context'] ?? self::USER_PARAMS_CONTEXT_DEFAULT);
+
+                if ($context === self::USER_PARAMS_CONTEXT_DEFAULT) {
+                    $defaultRow = $row;
+                } elseif ($context === self::USER_PARAMS_CONTEXT_TREEK_VIEW) {
+                    $treekViewRow = $row;
+                }
+            }
+
+            if (!$treekViewRow) {
+                continue;
+            }
+
+            $defaultSettings = [];
+
+            if ($defaultRow) {
+                $decodedDefault = json_decode((string) ($defaultRow['settings'] ?? ''), true);
+                $defaultSettings = is_array($decodedDefault) ? $decodedDefault : [];
+            }
+
+            $decodedTreekView = json_decode((string) ($treekViewRow['settings'] ?? ''), true);
+
+            if (is_array($decodedTreekView)) {
+                $defaultSettings['treekViewFeatures'] = $this->filterTreekViewSettings($decodedTreekView);
+            }
+
+            $now = Factory::getDate()->toSql();
+            $json = json_encode($this->filterTreeSettings($defaultSettings), JSON_UNESCAPED_UNICODE);
+
+            if ($defaultRow) {
+                $query = $db->getQuery(true)
+                    ->update($table)
+                    ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
+                    ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
+                    ->where($db->quoteName('id') . ' = ' . (int) $defaultRow['id']);
+            } else {
+                $query = $db->getQuery(true)
+                    ->update($table)
+                    ->set($db->quoteName('context') . ' = ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT))
+                    ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
+                    ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
+                    ->where($db->quoteName('id') . ' = ' . (int) $treekViewRow['id']);
+            }
+
+            $db->setQuery($query);
+            $db->execute();
+        }
+
+        $query = $db->getQuery(true)
+            ->delete($table)
+            ->where($db->quoteName('context') . ' <> ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT));
 
         $db->setQuery($query);
         $db->execute();
@@ -574,10 +652,6 @@ class PlgAjaxTreek extends CMSPlugin
 
     private function filterUserSettings(array $settings, string $context = self::USER_PARAMS_CONTEXT_DEFAULT): array
     {
-        if ($context === self::USER_PARAMS_CONTEXT_TREEK_VIEW) {
-            return $this->filterTreekViewSettings($settings);
-        }
-
         return $this->filterTreeSettings($settings);
     }
 
@@ -614,6 +688,10 @@ class PlgAjaxTreek extends CMSPlugin
                 'year' => (string) ($settings['timeFormat']['year'] ?? '4'),
                 'showClock' => (bool) ($settings['timeFormat']['showClock'] ?? true),
             ];
+        }
+
+        if (isset($settings['treekViewFeatures']) && is_array($settings['treekViewFeatures'])) {
+            $filtered['treekViewFeatures'] = $this->filterTreekViewSettings($settings['treekViewFeatures']);
         }
 
         return $filtered;
@@ -681,10 +759,6 @@ class PlgAjaxTreek extends CMSPlugin
 
     private function getUserParametersContext(string $context): string
     {
-        if ($context === self::USER_PARAMS_CONTEXT_TREEK_VIEW) {
-            return self::USER_PARAMS_CONTEXT_TREEK_VIEW;
-        }
-
         return self::USER_PARAMS_CONTEXT_DEFAULT;
     }
 

@@ -26,7 +26,7 @@ use Joomla\CMS\Session\Session;
  */
 class KunenaTemplatetreek extends KunenaTemplate
 {
-    private const TREEK_VIEW_CONTEXT = 'treek_view';
+    private const USER_PARAMS_CONTEXT_DEFAULT = 'default';
 
     private ?array $treekViewFeatures = null;
 
@@ -242,7 +242,7 @@ EOF;
                 ->select($db->quoteName('settings'))
                 ->from($db->quoteName('#__treek_user_parameters'))
                 ->where($db->quoteName('user_id') . ' = ' . (int) $userId)
-                ->where($db->quoteName('context') . ' = ' . $db->quote(self::TREEK_VIEW_CONTEXT));
+                ->where($db->quoteName('context') . ' = ' . $db->quote(self::USER_PARAMS_CONTEXT_DEFAULT));
 
             $db->setQuery($query);
             $json = (string) $db->loadResult();
@@ -266,9 +266,11 @@ EOF;
             return $this->treekViewFeatures;
         }
 
+        $savedFeatures = is_array($saved['treekViewFeatures'] ?? null) ? $saved['treekViewFeatures'] : [];
+
         foreach (array_keys($features) as $key) {
-            if (array_key_exists($key, $saved)) {
-                $features[$key] = (bool) $saved[$key];
+            if (array_key_exists($key, $savedFeatures)) {
+                $features[$key] = (bool) $savedFeatures[$key];
             }
         }
 

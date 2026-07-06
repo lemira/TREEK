@@ -411,8 +411,7 @@ public function uninstall($parent)
             " . $db->quoteName('created_at') . " datetime NOT NULL,
             " . $db->quoteName('updated_at') . " datetime NOT NULL,
             PRIMARY KEY (" . $db->quoteName('id') . "),
-            UNIQUE KEY " . $db->quoteName('idx_user_context') . " (" . $db->quoteName('user_id') . ", " . $db->quoteName('context') . "),
-            KEY " . $db->quoteName('idx_user_id') . " (" . $db->quoteName('user_id') . ")
+            UNIQUE KEY " . $db->quoteName('idx_user_id') . " (" . $db->quoteName('user_id') . ")
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
     ";
 
@@ -458,13 +457,15 @@ protected function ensureUserParametersTableSchema(string $tableName): void
         $db->execute();
     }
 
+    $this->mergeTreekViewUserParameterRows($tableName);
+    $this->removeDuplicateUserParameterRows($tableName);
+
     $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName));
     $indexes = (array) $db->loadAssocList();
     $byName = [];
 
     foreach ($indexes as $index) {
         $name = (string) ($index['Key_name'] ?? '');
-
         if ($name === '' || $name === 'PRIMARY') {
             continue;
         }
@@ -472,25 +473,31 @@ protected function ensureUserParametersTableSchema(string $tableName): void
         $byName[$name][] = $index;
     }
 
+    $hasUniqueUserIndex = false;
+
     foreach ($byName as $name => $parts) {
+        usort($parts, static fn($a, $b) => (int) ($a['Seq_in_index'] ?? 0) <=> (int) ($b['Seq_in_index'] ?? 0));
+
         $columns = array_map(static fn($part) => (string) ($part['Column_name'] ?? ''), $parts);
         $isUnique = isset($parts[0]['Non_unique']) && (int) $parts[0]['Non_unique'] === 0;
 
-        if ($isUnique && $columns === ['user_id']) {
+        if ($name === 'idx_user_context' || ($name === 'idx_user_id' && (!$isUnique || $columns !== ['user_id']))) {
             $db->setQuery('ALTER TABLE ' . $db->quoteName($tableName) . ' DROP INDEX ' . $db->quoteName($name));
             $db->execute();
+
+            continue;
+        }
+
+        if ($isUnique && $columns === ['user_id']) {
+            $hasUniqueUserIndex = true;
         }
     }
 
-    $this->removeDuplicateUserParameterRows($tableName);
-
-    $db->setQuery('SHOW INDEX FROM ' . $db->quoteName($tableName) . ' WHERE Key_name = ' . $db->quote('idx_user_context'));
-
-    if (!$db->loadAssoc()) {
+    if (!$hasUniqueUserIndex) {
         $db->setQuery(
             'ALTER TABLE ' . $db->quoteName($tableName)
-            . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_context')
-            . ' (' . $db->quoteName('user_id') . ', ' . $db->quoteName('context') . ')'
+            . ' ADD UNIQUE KEY ' . $db->quoteName('idx_user_id')
+            . ' (' . $db->quoteName('user_id') . ')'
         );
         $db->execute();
     }
@@ -504,11 +511,113 @@ protected function removeDuplicateUserParameterRows(string $tableName): void
     $query = 'DELETE old_rows FROM ' . $table . ' AS old_rows'
         . ' INNER JOIN ' . $table . ' AS keep_rows'
         . ' ON old_rows.' . $db->quoteName('user_id') . ' = keep_rows.' . $db->quoteName('user_id')
-        . ' AND old_rows.' . $db->quoteName('context') . ' = keep_rows.' . $db->quoteName('context')
         . ' AND old_rows.' . $db->quoteName('id') . ' < keep_rows.' . $db->quoteName('id');
 
     $db->setQuery($query);
     $db->execute();
+}
+
+protected function mergeTreekViewUserParameterRows(string $tableName): void
+{
+    $db = Factory::getDbo();
+    $table = $db->quoteName($tableName);
+
+    $query = $db->getQuery(true)
+        ->select($db->quoteName(['id', 'user_id', 'context', 'settings']))
+        ->from($table)
+        ->where($db->quoteName('context') . ' IN (' . $db->quote('default') . ', ' . $db->quote('treek_view') . ')')
+        ->order($db->quoteName('user_id') . ' ASC, ' . $db->quoteName('id') . ' ASC');
+
+    $db->setQuery($query);
+    $rows = (array) $db->loadAssocList();
+    $byUser = [];
+
+    foreach ($rows as $row) {
+        $byUser[(int) ($row['user_id'] ?? 0)][] = $row;
+    }
+
+    foreach ($byUser as $userId => $userRows) {
+        if ($userId <= 0) {
+            continue;
+        }
+
+        $defaultRow = null;
+        $treekViewRow = null;
+
+        foreach ($userRows as $row) {
+            $context = (string) ($row['context'] ?? 'default');
+
+            if ($context === 'default') {
+                $defaultRow = $row;
+            } elseif ($context === 'treek_view') {
+                $treekViewRow = $row;
+            }
+        }
+
+        if (!$treekViewRow) {
+            continue;
+        }
+
+        $defaultSettings = [];
+
+        if ($defaultRow) {
+            $decodedDefault = json_decode((string) ($defaultRow['settings'] ?? ''), true);
+            $defaultSettings = is_array($decodedDefault) ? $decodedDefault : [];
+        }
+
+        $decodedTreekView = json_decode((string) ($treekViewRow['settings'] ?? ''), true);
+
+        if (is_array($decodedTreekView)) {
+            $defaultSettings['treekViewFeatures'] = $this->filterTreekViewSettingsForInstall($decodedTreekView);
+        }
+
+        $now = Factory::getDate()->toSql();
+        $json = json_encode($defaultSettings, JSON_UNESCAPED_UNICODE);
+
+        if ($defaultRow) {
+            $query = $db->getQuery(true)
+                ->update($table)
+                ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
+                ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
+                ->where($db->quoteName('id') . ' = ' . (int) $defaultRow['id']);
+        } else {
+            $query = $db->getQuery(true)
+                ->update($table)
+                ->set($db->quoteName('context') . ' = ' . $db->quote('default'))
+                ->set($db->quoteName('settings') . ' = ' . $db->quote($json))
+                ->set($db->quoteName('updated_at') . ' = ' . $db->quote($now))
+                ->where($db->quoteName('id') . ' = ' . (int) $treekViewRow['id']);
+        }
+
+        $db->setQuery($query);
+        $db->execute();
+    }
+
+    $query = $db->getQuery(true)
+        ->delete($table)
+        ->where($db->quoteName('context') . ' <> ' . $db->quote('default'));
+
+    $db->setQuery($query);
+    $db->execute();
+}
+
+protected function filterTreekViewSettingsForInstall(array $settings): array
+{
+    $filtered = [
+        'parent_post_navigation' => true,
+        'reply_form_treek_look' => false,
+        'subject_suffix' => false,
+        'attachments_toggle' => false,
+        'inline_action_buttons' => false,
+    ];
+
+    foreach (array_keys($filtered) as $key) {
+        if (array_key_exists($key, $settings)) {
+            $filtered[$key] = (bool) $settings[$key];
+        }
+    }
+
+    return $filtered;
 }
 
 protected function keepUserParametersTable(): void

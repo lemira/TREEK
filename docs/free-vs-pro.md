@@ -3,13 +3,13 @@
 TreeK Free is intended to be a real working edition, not a demo. TreeK Pro adds
 comfort, export, monitoring, and forum-view workflow features.
 
+The meaning of all TreeK options and the ways to use them are described in more detail at:
+
+https://treek.support
+
 TreeK Pro can be fully tested on the project site, for example in this forum topic:
 
 https://treek.support/index.php/forum/examples-of-trees-on-forums/1-example-of-tree
-
-The meaning of TreeK options and the ways to use them are described in more detail at:
-
-https://treek.support
 
 ## Free
 

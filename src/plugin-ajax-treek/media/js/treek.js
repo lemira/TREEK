@@ -23,6 +23,7 @@ function buildTreekAjaxUrl() {
 const AJAX_URL = buildTreekAjaxUrl();
 
 const TREE_POLL_INTERVAL = 60000;
+const TREEK_REOPEN_AFTER_RELOAD_KEY = 'treek_reopen_after_forum_view_reload';
 
 let TREEK_EDITION = 'free';
 // TREEK-PRO-START: edition_flag
@@ -119,6 +120,47 @@ let showProPreview = false;
 let showForumViewSettings = false;
 let treekViewFeatures = getDefaultTreekViewFeatures();
 let treekViewAutoSaveTimer = null;
+
+function rememberTreeReopenAfterReload() {
+    if (!currentPopover || !currentTrigger) {
+        return;
+    }
+
+    const topicId = currentPopover.dataset.topicId || currentTrigger.getAttribute('data-topic-id') || '';
+
+    if (!topicId) {
+        return;
+    }
+
+    sessionStorage.setItem(TREEK_REOPEN_AFTER_RELOAD_KEY, JSON.stringify({
+        topicId,
+        currentPostId: currentTrigger.getAttribute('data-current-post-id') || '',
+        openSettings: true,
+        createdAt: Date.now()
+    }));
+}
+
+function consumeTreeReopenAfterReload() {
+    let payload = null;
+
+    try {
+        payload = JSON.parse(sessionStorage.getItem(TREEK_REOPEN_AFTER_RELOAD_KEY) || 'null');
+    } catch (e) {
+        payload = null;
+    }
+
+    sessionStorage.removeItem(TREEK_REOPEN_AFTER_RELOAD_KEY);
+
+    if (!payload || typeof payload !== 'object' || !payload.topicId) {
+        return null;
+    }
+
+    if (Date.now() - (parseInt(payload.createdAt, 10) || 0) > 30000) {
+        return null;
+    }
+
+    return payload;
+}
 
 try {
     const sessionState = JSON.parse(sessionStorage.getItem('treek_settings') || '{}');
@@ -851,7 +893,30 @@ function resolveParentLink(link, allowTokenRefresh = true) {
     }
     // TREEK-PRO-END: screen_teaser
 
-    function showTree(trigger) {
+    function openSettingsPanel() {
+        if (!currentPopover) {
+            return;
+        }
+
+        const panel = currentPopover.querySelector('.treek-settings-panel');
+        const exportPanel = currentPopover.querySelector('.treek-export-panel');
+
+        if (!panel) {
+            return;
+        }
+
+        panel.style.display = 'block';
+        panel.style.position = 'absolute';
+        panel.style.right = '20px';
+        panel.style.top = '50px';
+        panel.style.left = 'auto';
+
+        if (exportPanel) {
+            exportPanel.style.display = 'none';
+        }
+    }
+
+    function showTree(trigger, options = {}) {
         const topicId = trigger.getAttribute('data-topic-id');
         const token = trigger.getAttribute('data-token');
 
@@ -1044,6 +1109,10 @@ renderContent();
 
 if (activePostId) {
     activateTreeRow(activePostId);
+}
+
+if (options.openSettings) {
+    openSettingsPanel();
 }
 
 // TREEK-PRO-START: topic_live_notice
@@ -1491,6 +1560,7 @@ function exportTreeToClipboard(format) {
                     );
 
                     updateUserParamsButtons();
+                    rememberTreeReopenAfterReload();
                     window.location.reload();
                 })
                 .catch(err => {
@@ -1950,6 +2020,27 @@ if (e.target.name === 'tr_teaser_mode') {
             saveState();
             renderContent();
         });
+
+        const reopenPayload = consumeTreeReopenAfterReload();
+
+        if (reopenPayload) {
+            window.requestAnimationFrame(() => {
+                const trigger = Array.from(document.querySelectorAll('.treek-trigger, .treek-icon-trigger'))
+                    .find(item => item.getAttribute('data-topic-id') === String(reopenPayload.topicId));
+
+                if (!trigger) {
+                    return;
+                }
+
+                if (reopenPayload.currentPostId && !trigger.getAttribute('data-current-post-id')) {
+                    trigger.setAttribute('data-current-post-id', reopenPayload.currentPostId);
+                }
+
+                showTree(trigger, {
+                    openSettings: !!reopenPayload.openSettings
+                });
+            });
+        }
     };
 
     function closePopover() {

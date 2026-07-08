@@ -6,8 +6,7 @@ losing the context of who replied to whom.
 
 The settings of the tree window allow the user to see the content of a single
 post or teasers (beginnings) of all posts on the topic at once, choose a
-convenient tree view, immediately receive a message about adding a new post to
-the topic, etc. without leaving the tree window.
+convenient tree view, etc. without leaving the tree window.
 
 All actions for creating themes, adding and changing posts, etc. are carried out
 in the usual way in Kunena.

@@ -4,7 +4,7 @@ TreeK is installed as a Joomla package.
 
 ## Requirements
 
-- Joomla 5.3.x, 5.4.x, 6.0.x, or 6.1.x compatible environment.
+- Joomla 5.4.x, 6.0.x, or 6.1.x.
 - Kunena Forum 7.x.
 - A working Kunena installation before installing TreeK.
 

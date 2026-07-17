@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<changelogs>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.1</version>
+        <fix>
+            <item>Preserve line breaks in text post excerpts and remove extra blank lines between real lines.</item>
+        </fix>
+        <change>
+            <item>Display text post excerpts as compact tooltip-style bubbles.</item>
+            <item>Clarify that TreeK can normally be updated by installing the new package over the existing one.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.0</version>
+        <addition>
+            <item>Split TreeK into Free and Pro editions.</item>
+            <item>Added Free package build and TreeK Free update server metadata.</item>
+        </addition>
+    </changelog>
+</changelogs>

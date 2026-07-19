@@ -1,6 +1,7 @@
 /* TREEK */
 
 .treek-tree-canvas {
+    position: relative !important;
     display: inline-block !important;
     min-width: 100% !important;
 }
@@ -41,6 +42,7 @@
 }
 
 .treek-row {
+    position: relative !important;
     display: block !important;
     width: max-content !important;
     min-width: 100% !important;
@@ -77,6 +79,29 @@
     color: #555 !important;
     margin-top: 4px !important;
     line-height: 1.4 !important;
+}
+
+.treek-row__teaser-text-bubble {
+    display: inline-block !important;
+    max-width: min(720px, calc(100vw - 32px)) !important;
+    min-width: 280px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    white-space: pre-line !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.85em !important;
+    color: #333 !important;
+}
+
+.treek-row__teaser-text-bubble--framed {
+    padding: 2px 6px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid #bbb !important;
+    border-radius: 2px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12) !important;
 }
 
 /* Панель настроек */
@@ -383,6 +408,20 @@
     margin-bottom: 6px !important;
 }
 
+.treek-pro-preview__test-link {
+    display: inline-block !important;
+    margin-top: 8px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #0d6efd !important;
+    text-decoration: none !important;
+}
+
+.treek-pro-preview__test-link:hover,
+.treek-pro-preview__test-link:focus {
+    text-decoration: underline !important;
+}
+
 .treek-pro-locked-option {
     display: grid !important;
     grid-template-columns: 18px 1fr !important;
@@ -426,6 +465,83 @@
 .treek-row__tab + .treek-row__subject,
 .treek-row__tab + .treek-row__author {
     margin-left: 0 !important;
+}
+
+.treek-hard-grid-overlay {
+    position: absolute !important;
+    inset: 0 !important;
+    z-index: 3 !important;
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+.treek-row--hard-grid {
+    position: relative !important;
+}
+
+.treek-row--hard-grid .treek-row__header-line,
+.treek-row--hard-grid .treek-row__teaser {
+    position: relative !important;
+}
+
+.treek-row__grid-spacer {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    height: 1px !important;
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+.treek-hard-grid-line {
+    position: absolute !important;
+    pointer-events: auto !important;
+    user-select: none !important;
+}
+
+.treek-hard-grid-line--vertical {
+    width: 9px !important;
+    transform: translateX(-4px) !important;
+}
+
+.treek-hard-grid-line--horizontal {
+    height: 9px !important;
+    transform: translateY(-4px) !important;
+}
+
+.treek-hard-grid-line--vertical::before,
+.treek-hard-grid-line--horizontal::before {
+    content: "" !important;
+    position: absolute !important;
+    background: rgba(90, 110, 130, 0.32) !important;
+}
+
+.treek-hard-grid-line--vertical::before {
+    left: 4px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 1px !important;
+}
+
+.treek-hard-grid-line--horizontal::before {
+    left: 0 !important;
+    right: 0 !important;
+    top: 4px !important;
+    height: 1px !important;
+}
+
+.treek-hard-grid-line:hover::before,
+.treek-hard-grid-line--branch-hover::before {
+    background: rgba(13, 110, 253, 0.62) !important;
+}
+
+.treek-hard-grid-line--vertical:hover::before,
+.treek-hard-grid-line--vertical.treek-hard-grid-line--branch-hover::before {
+    width: 2px !important;
+}
+
+.treek-hard-grid-line--horizontal:hover::before,
+.treek-hard-grid-line--horizontal.treek-hard-grid-line--branch-hover::before {
+    height: 2px !important;
 }
 
 // =============================================================================

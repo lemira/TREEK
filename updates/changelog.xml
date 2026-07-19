@@ -3,6 +3,21 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.5</version>
+        <change>
+            <item>Added compatibility updates for Kunena 7.0.6 and 7.0.7.</item>
+            <item>Made Replies counters in category, user and message topic lists open the TreeK window like Recent Topics.</item>
+            <item>Renamed Show post excerpt settings to Show post beginning.</item>
+            <item>Improved guest-state hints in TreeK Pro settings for saved settings and Forum view options.</item>
+        </change>
+        <fix>
+            <item>Removed a confusing arrow icon from quote headers while keeping the quote source link.</item>
+            <item>Fixed the TreeK template author URL in the Kunena template manifest.</item>
+        </fix>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.4</version>
         <change>
             <item>The TreeK settings panel now opens automatically when the TreeK window is opened.</item>

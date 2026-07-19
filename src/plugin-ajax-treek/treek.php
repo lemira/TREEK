@@ -323,10 +323,10 @@ class PlgAjaxTreek extends CMSPlugin
                         $plain = str_replace(["\r\n", "\r"], "\n", $plain);
                         $plain = preg_replace('/[ \t]+/u', ' ', $plain);
                         $plain = preg_replace('/[ \t]*\n[ \t]*/u', "\n", $plain);
-                        $plain = preg_replace("/\n{3,}/u", "\n\n", $plain);
+                        $plain = preg_replace("/\n{2,}/u", "\n", $plain);
                         $plain = trim($plain);
 
-                        $row['text'] = preg_replace('/\s+/u', ' ', $plain);
+                        $row['text'] = $plain;
                         $row['tooltip'] = mb_substr($plain, 0, 400);
                         $row['teaserHtml'] = $html;
                     } else {
@@ -351,7 +351,7 @@ class PlgAjaxTreek extends CMSPlugin
             $tree['userParams'] = $this->getUserParametersStatus($userId);
             $savedUserSettings = $userId > 0 ? $this->loadUserParameters($userId) : null;
             $tree['treekViewFeatures'] = is_array($savedUserSettings['treekViewFeatures'] ?? null)
-                ? $savedUserSettings['treekViewFeatures']
+                ? $this->filterTreekViewSettings($savedUserSettings['treekViewFeatures'])
                 : $this->getDefaultTreekViewFeatures();
 
             $this->debugAjaxLog('tree_success', [
@@ -571,6 +571,7 @@ class PlgAjaxTreek extends CMSPlugin
             'showNavTools',
             'showHighlightTools',
             'showTeaser',
+            'teaserTextFrame',
         ] as $key) {
             if (array_key_exists($key, $settings)) {
                 $filtered[$key] = (bool) $settings[$key];

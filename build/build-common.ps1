@@ -64,6 +64,61 @@ function Set-PackageUpdateServer {
     Set-Content -LiteralPath $ManifestPath -Value $content -Encoding utf8
 }
 
+function Set-PackageEditionMetadata {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $PackageRoot,
+
+        [Parameter(Mandatory = $true)]
+        [string] $ManifestPath,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateSet('Free', 'Pro')]
+        [string] $Edition
+    )
+
+    $packageName = if ($Edition -eq 'Pro') { 'TreeK Pro' } else { 'TreeK Free' }
+    $manifestContent = Get-Content -LiteralPath $ManifestPath -Raw
+    $manifestContent = [regex]::Replace($manifestContent, '<name>.*?</name>', "<name>$packageName</name>", 1)
+    Set-Content -LiteralPath $ManifestPath -Value $manifestContent -Encoding utf8
+
+    $installMessages = @{
+        'en-GB' = if ($Edition -eq 'Pro') {
+            'TreeK Pro has been successfully installed'
+        } else {
+            'TreeK Free has been successfully installed'
+        }
+        'ru-RU' = if ($Edition -eq 'Pro') {
+            'Установлена версия TreeK Pro'
+        } else {
+            'Установлена версия TreeK Free'
+        }
+        'de-DE' = if ($Edition -eq 'Pro') {
+            'TreeK Pro wurde erfolgreich installiert'
+        } else {
+            'TreeK Free wurde erfolgreich installiert'
+        }
+    }
+
+    foreach ($languageTag in $installMessages.Keys) {
+        $languageFile = Join-Path $PackageRoot "language\$languageTag\pkg_treek.ini"
+
+        if (-not (Test-Path -LiteralPath $languageFile -PathType Leaf)) {
+            continue
+        }
+
+        $languageContent = Get-Content -LiteralPath $languageFile -Raw
+        $escapedMessage = $installMessages[$languageTag].Replace('"', '\"')
+        $languageContent = [regex]::Replace(
+            $languageContent,
+            '(?m)^PKG_TREEK_SUCCESS_INSTALL=".*"$',
+            "PKG_TREEK_SUCCESS_INSTALL=`"$escapedMessage`"",
+            1
+        )
+        Set-Content -LiteralPath $languageFile -Value $languageContent -Encoding utf8
+    }
+}
+
 function Remove-FreeProOnlyFiles {
     param(
         [Parameter(Mandatory = $true)]
@@ -247,6 +302,7 @@ try {
     Set-PackageUpdateServer -ManifestPath $tempPackageManifest -Edition $Edition
     Copy-Item -LiteralPath (Join-Path $packageSource 'treek_install_script.php') -Destination $tempPackage -Force
     Copy-Item -LiteralPath (Join-Path $packageSource 'language') -Destination $tempPackage -Recurse -Force
+    Set-PackageEditionMetadata -PackageRoot $tempPackage -ManifestPath $tempPackageManifest -Edition $Edition
 
     $tempPackagesDir = Join-Path $tempPackage 'packages'
     New-Item -ItemType Directory -Path $tempPackagesDir -Force | Out-Null
@@ -280,23 +336,37 @@ try {
         New-Item -ItemType Directory -Path $outputDir | Out-Null
     }
 
-    if (Test-Path -LiteralPath $outputFullPath) {
-        Remove-Item -LiteralPath $outputFullPath -Force
-    }
+    $outputFileName = [System.IO.Path]::GetFileName($outputFullPath)
+    $stagingOutputPath = Join-Path $repoRoot ($outputFileName + '.' + [guid]::NewGuid().ToString('N') + '.tmp.zip')
 
-    Compress-DirectoryForJoomla -SourceDir $tempPackage -OutputPath $outputFullPath
+    Compress-DirectoryForJoomla -SourceDir $tempPackage -OutputPath $stagingOutputPath
 
-    Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'pkg_treek.xml'
-    Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'treek_install_script.php'
-    Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'packages/plg_ajax_treek.zip'
-    Assert-ZipHasEntry -ZipPath $outputFullPath -EntryName 'packages/file_treek_kunena.zip'
+    Assert-ZipHasEntry -ZipPath $stagingOutputPath -EntryName 'pkg_treek.xml'
+    Assert-ZipHasEntry -ZipPath $stagingOutputPath -EntryName 'treek_install_script.php'
+    Assert-ZipHasEntry -ZipPath $stagingOutputPath -EntryName 'packages/plg_ajax_treek.zip'
+    Assert-ZipHasEntry -ZipPath $stagingOutputPath -EntryName 'packages/file_treek_kunena.zip'
 
     if ($Edition -eq 'Free') {
-        Assert-NoProMarkersInZip -ZipPath $outputFullPath
+        Assert-NoProMarkersInZip -ZipPath $stagingOutputPath
     }
+
+    [System.IO.File]::Copy($stagingOutputPath, $outputFullPath, $true)
+
+    $stagingLength = (Get-Item -LiteralPath $stagingOutputPath).Length
+    $outputLength = (Get-Item -LiteralPath $outputFullPath).Length
+
+    if ($stagingLength -ne $outputLength) {
+        throw "Published ZIP size mismatch. Staging: $stagingLength bytes, output: $outputLength bytes"
+    }
+
+    Remove-Item -LiteralPath $stagingOutputPath -Force
 
     Write-Output "Built TreeK $Edition package ZIP: $outputFullPath"
 } finally {
+    if ($stagingOutputPath -and (Test-Path -LiteralPath $stagingOutputPath)) {
+        Remove-Item -LiteralPath $stagingOutputPath -Force
+    }
+
     if (Test-Path -LiteralPath $tempRoot) {
         Remove-Item -LiteralPath $tempRoot -Recurse -Force
     }

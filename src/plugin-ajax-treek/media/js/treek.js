@@ -85,6 +85,7 @@ const fallbackLangs = {
     TREEK_PRO_LOCK_SYMBOL: 'Lock',
     TREEK_PRO_OPTIONS: 'Pro options',
     TREEK_PRO_LOCKED: 'Available in Pro',
+    TREEK_TEST_PRO: 'Test TreeK Pro',
     TREEK_SET_FORUM_VIEW: 'Forum view',
     TREEK_SET_PARENT_POST_NAVIGATION: 'Parent post arrow',
     TREEK_SET_REPLY_FORM_TREEK_LOOK: 'Comfort form header',
@@ -93,7 +94,8 @@ const fallbackLangs = {
     TREEK_SET_INLINE_ACTION_BUTTONS: '3 action buttons',
     TREEK_SET_BUTTON_SYMBOL_TOOLTIPS: 'Tooltips for buttons and symbols',
     TREEK_SET_SETTINGS_DRAG: 'Draggable settings window',
-    TREEK_SET_TOPIC_LIVE_NOTICE: 'Topic watch. Notice when a post is added to the topic'
+    TREEK_SET_TOPIC_LIVE_NOTICE: 'Topic watch. Notice when a post is added to the topic',
+    TREEK_SET_TEASER_TEXT_FRAME: 'Frame around text'
 };
 
     const defaultState = {
@@ -112,7 +114,8 @@ const fallbackLangs = {
         showHighlightTools: false,
         showTeaser: false,
         teaserMode: 'text',
-        teaserLen: 150
+        teaserLen: 150,
+        teaserTextFrame: false
     };
 
 let state = Object.assign({}, defaultState);
@@ -294,6 +297,7 @@ showForumViewSettings = loadForumViewOpenState() === true;
             const indentSize = (cachedData.params.indent_px || 16);
             const pad = level * indentSize + 10;
 const gridPrefix = buildGridPrefix(level, indentSize);
+const isHardGrid = state.view === 'tree' && state.showGrid && state.gridMode === 'hard' && level > 0;
 const headerPad = gridPrefix ? 10 : pad;
 const teaserPad = headerPad + (state.showGrid && state.view === 'tree' ? level * (indentSize + 8) : 0);
             const isTreeView = state.view === 'tree';
@@ -301,7 +305,8 @@ const teaserPad = headerPad + (state.showGrid && state.view === 'tree' ? level *
             const isActive = activePostId !== null && String(row.id) === String(activePostId);
 const rowClass = 'treek-row treek-row-link'
     + (isLast ? ' treek-row--last' : '')
-    + (isActive ? ' treek-row--active' : '');
+    + (isActive ? ' treek-row--active' : '')
+    + (isHardGrid ? ' treek-row--hard-grid' : '');
 
             let tooltipText = (row.tooltip || row.text || '').substring(0, 400);
             if (tooltipText.length === 400) tooltipText += '...';
@@ -374,13 +379,14 @@ if (state.primary === 'subject_only') {
                     }
 
                     if (textSnippet) {
-                        teaserHtml = `<div class="treek-row__teaser treek-row__teaser--text" style="padding-left:${teaserPad}px">${escapeHtml(textSnippet)}</div>`;
+                        const frameClass = state.teaserTextFrame ? ' treek-row__teaser-text-bubble--framed' : '';
+                        teaserHtml = `<div class="treek-row__teaser treek-row__teaser--text" style="padding-left:${teaserPad}px"><div class="treek-row__teaser-text-bubble${frameClass}">${escapeHtml(textSnippet)}</div></div>`;
                     }
                 }
             }
 
             html += `
-                <div class="${rowClass}" data-post-id="${row.id}" data-parent-id="${row.parent || 0}" data-author="${escapeAttr(row.username || row.author || 'Guest')}" data-post-index="${row.postIndex ?? ''}">
+                <div class="${rowClass}" data-post-id="${row.id}" data-parent-id="${row.parent || 0}" data-level="${level}" data-author="${escapeAttr(row.username || row.author || 'Guest')}" data-post-index="${row.postIndex ?? ''}">
                     <div class="treek-row__header-line" style="padding-left:${headerPad}px">
                         ${gridPrefix}${content} ${comfort} ${time} ${idx}
                     </div>
@@ -393,6 +399,7 @@ if (state.primary === 'subject_only') {
             : '<div class="treek-empty">' + _('TREEK_NO_DATA') + '</div>';
 
         initAuthorTooltips(body);
+        scheduleHardGridOverlay(body);
         // TREEK-PRO-START: screen_teaser
         initLazyScreenTeasers(body);
         // TREEK-PRO-END: screen_teaser
@@ -422,13 +429,13 @@ if (state.primary === 'subject_only') {
 function buildGridPrefix(level, indentSize) {
     if (state.view !== 'tree' || !state.showGrid || level <= 0) return '';
 
-    let symbol = _('TREEK_TAB_CHARACTER_LIGHT_SYMBOL');
+    const width = Math.max(1, parseInt(indentSize, 10) || 16);
 
     if (state.gridMode === 'hard') {
-        symbol = _('TREEK_TAB_CHARACTER_HARD_SYMBOL');
+        return `<span class="treek-row__grid-spacer" style="width:${level * width}px" aria-hidden="true"></span>`;
     }
 
-    const width = Math.max(1, parseInt(indentSize, 10) || 16);
+    const symbol = _('TREEK_TAB_CHARACTER_LIGHT_SYMBOL');
     let html = '';
 
     for (let i = 0; i < level; i++) {
@@ -436,6 +443,163 @@ function buildGridPrefix(level, indentSize) {
     }
 
     return html;
+}
+
+function scheduleHardGridOverlay(container) {
+    window.requestAnimationFrame(() => renderHardGridOverlay(container));
+}
+
+function renderHardGridOverlay(container) {
+    const canvas = container ? container.querySelector('.treek-tree-canvas') : null;
+
+    if (!canvas) return;
+
+    canvas.querySelectorAll('.treek-hard-grid-overlay').forEach(item => item.remove());
+
+    if (state.view !== 'tree' || !state.showGrid || state.gridMode !== 'hard') {
+        return;
+    }
+
+    const rows = Array.from(canvas.querySelectorAll('.treek-row'));
+
+    if (!rows.length) return;
+
+    const indentSize = (cachedData && cachedData.params && cachedData.params.indent_px) || 16;
+    const width = Math.max(1, parseInt(indentSize, 10) || 16);
+    const gridLeft = 10;
+    const overlay = document.createElement('span');
+    const childrenByParent = {};
+    const visiblePostIds = new Set(rows.map(row => row.dataset.postId).filter(Boolean));
+    const latestRowByLevel = {};
+    const branchKeyByRow = new Map();
+
+    overlay.className = 'treek-hard-grid-overlay';
+
+    rows.forEach(row => {
+        const parentId = row.dataset.parentId || '0';
+        const level = parseInt(row.dataset.level, 10) || 0;
+
+        Object.keys(latestRowByLevel).forEach(key => {
+            if (parseInt(key, 10) > level) {
+                delete latestRowByLevel[key];
+            }
+        });
+
+        if (level <= 0) {
+            latestRowByLevel[level] = row;
+            return;
+        }
+
+        const visualParent = latestRowByLevel[level - 1];
+        const branchKey = parentId !== '0' && visiblePostIds.has(parentId)
+            ? parentId
+            : (visualParent ? visualParent.dataset.postId : '');
+
+        if (branchKey) {
+            if (!childrenByParent[branchKey]) childrenByParent[branchKey] = [];
+
+            childrenByParent[branchKey].push(row);
+            branchKeyByRow.set(row, branchKey);
+        }
+
+        latestRowByLevel[level] = row;
+    });
+
+    const getSubtreeEndRow = (startRow) => {
+        const startIndex = rows.indexOf(startRow);
+        const startLevel = parseInt(startRow.dataset.level, 10) || 0;
+        let endRow = startRow;
+
+        for (let i = startIndex + 1; i < rows.length; i++) {
+            const nextLevel = parseInt(rows[i].dataset.level, 10) || 0;
+
+            if (nextLevel <= startLevel) break;
+
+            endRow = rows[i];
+        }
+
+        return endRow;
+    };
+
+    const makeLine = (className, style, branchKey = '') => {
+        const line = document.createElement('span');
+        line.className = className;
+
+        if (branchKey) {
+            line.dataset.branchKey = branchKey;
+        }
+
+        Object.keys(style).forEach(key => {
+            line.style[key] = style[key];
+        });
+
+        return line;
+    };
+
+    Object.keys(childrenByParent).forEach(parentId => {
+        const childRows = childrenByParent[parentId].slice().sort((a, b) => a.offsetTop - b.offsetTop);
+
+        if (!childRows.length) return;
+
+        const childLevel = parseInt(childRows[0].dataset.level, 10) || 0;
+
+        if (childLevel <= 0) return;
+
+        const firstChild = childRows[0];
+        const lastDescendant = getSubtreeEndRow(childRows[childRows.length - 1]);
+        const x = gridLeft + (childLevel - 0.5) * width;
+        const top = firstChild.offsetTop;
+        const bottom = lastDescendant.offsetTop + lastDescendant.offsetHeight;
+
+        overlay.appendChild(makeLine('treek-hard-grid-line treek-hard-grid-line--vertical', {
+            left: x + 'px',
+            top: top + 'px',
+            height: Math.max(0, bottom - top) + 'px'
+        }, parentId));
+    });
+
+    rows.forEach(row => {
+        const level = parseInt(row.dataset.level, 10) || 0;
+        const branchKey = branchKeyByRow.get(row);
+
+        if (level <= 0 || !branchKey) return;
+
+        const header = row.querySelector('.treek-row__header-line');
+
+        if (!header) return;
+
+        const x = gridLeft + (level - 0.5) * width;
+        const y = row.offsetTop + header.offsetTop + header.offsetHeight - 3;
+        const endX = gridLeft + level * width + 2;
+
+        overlay.appendChild(makeLine('treek-hard-grid-line treek-hard-grid-line--horizontal', {
+            left: x + 'px',
+            top: y + 'px',
+            width: Math.max(6, endX - x) + 'px'
+        }, branchKey));
+    });
+
+    if (overlay.childNodes.length) {
+        canvas.prepend(overlay);
+        initHardGridBranchHover(overlay);
+    }
+}
+
+function initHardGridBranchHover(overlay) {
+    const setBranchHover = (branchKey, hovered) => {
+        if (!branchKey) return;
+
+        overlay.querySelectorAll('.treek-hard-grid-line[data-branch-key]').forEach(line => {
+            if (line.dataset.branchKey !== branchKey) return;
+
+            line.classList.toggle('treek-hard-grid-line--branch-hover', hovered);
+        });
+    };
+
+    overlay.querySelectorAll('.treek-hard-grid-line[data-branch-key]').forEach(line => {
+        line.addEventListener('mouseenter', () => setBranchHover(line.dataset.branchKey, true));
+        line.addEventListener('mouseleave', () => setBranchHover(line.dataset.branchKey, false));
+    });
 }
 
     function normalizeTimeFormat(format) {
@@ -534,6 +698,7 @@ function renderFreeProPreviewHtml() {
     return `
         <div class="treek-settings-group treek-pro-preview" style="display:${showProPreview ? 'block' : 'none'};">
             ${items}
+            <a class="treek-pro-preview__test-link" href="https://treek.support" target="_blank" rel="noopener noreferrer">${_('TREEK_TEST_PRO')}</a>
         </div>`;
 }
 
@@ -869,6 +1034,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
             placeholder.className = 'treek-screen-teaser';
             placeholder.style.maxHeight = teaserHeight + 'px';
             placeholder.innerHTML = row.teaserHtml;
+            scheduleHardGridOverlay(container);
         };
 
         if (!('IntersectionObserver' in window)) {
@@ -994,6 +1160,11 @@ function resolveParentLink(link, allowTokenRefresh = true) {
                         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;">
                             <input type="radio" name="tr_teaser_mode" value="text" ${state.teaserMode === 'text' ? 'checked' : ''}>
                             ${_('TREEK_SET_TEASER_MODE_TEXT')}
+                        </label>
+
+                        <label class="treek-opt treek-teaser-text-frame-wrap" style="display:${state.teaserMode === 'text' ? 'flex' : 'none'}; align-items:center; gap:6px; padding:1px 0 3px 24px; font-size:11px; color:#444;">
+                            <input type="checkbox" name="tr_teaser_text_frame" ${state.teaserTextFrame ? 'checked' : ''}>
+                            ${_('TREEK_SET_TEASER_TEXT_FRAME')}
                         </label>
 
                         <!-- TREEK-PRO-START: screen_teaser -->
@@ -1200,7 +1371,8 @@ function activateTreeRow(postId) {
             showHighlightTools: state.showHighlightTools,
             showTeaser: state.showTeaser,
             teaserMode: state.teaserMode,
-            teaserLen: state.teaserLen
+            teaserLen: state.teaserLen,
+            teaserTextFrame: state.teaserTextFrame
         };
 
         // TREEK-PRO-START: treek_view_settings
@@ -1588,6 +1760,7 @@ function exportTreeToClipboard(format) {
         setRadio('tr_prim', state.primary);
         setChecked('tr_show_teaser', state.showTeaser);
         setRadio('tr_teaser_mode', state.teaserMode);
+        setChecked('tr_teaser_text_frame', state.teaserTextFrame);
         setChecked('tr_time', state.showTime);
         setRadio('tr_time_year', state.timeFormat.year);
         setChecked('tr_time_clock', state.timeFormat.showClock);
@@ -1613,6 +1786,9 @@ function exportTreeToClipboard(format) {
 
         const teaserWrap = currentPopover.querySelector('#treek_len_wrap');
         if (teaserWrap) teaserWrap.style.display = state.showTeaser ? 'block' : 'none';
+
+        const teaserTextFrameWrap = currentPopover.querySelector('.treek-teaser-text-frame-wrap');
+        if (teaserTextFrameWrap) teaserTextFrameWrap.style.display = state.teaserMode === 'text' ? 'flex' : 'none';
 
         const timeSetup = currentPopover.querySelector('#treek_time_setup');
         if (timeSetup) timeSetup.style.display = state.showTime ? 'block' : 'none';
@@ -2003,8 +2179,16 @@ if (e.target.name === 'tr_teaser_mode') {
 
     const teaserLen = currentPopover.querySelector('[name="tr_teaser_len"]');
     if (teaserLen) teaserLen.value = state.teaserLen;
+
+    const teaserTextFrameWrap = currentPopover.querySelector('.treek-teaser-text-frame-wrap');
+    if (teaserTextFrameWrap) teaserTextFrameWrap.style.display = state.teaserMode === 'text' ? 'flex' : 'none';
 }
 // TREEK-PRO-END: screen_teaser
+
+            if (e.target.name === 'tr_teaser_text_frame') {
+                state.teaserTextFrame = e.target.checked;
+            }
+
             if (e.target.name === 'tr_time_year') {
                 state.timeFormat.year = e.target.value;
                 updateDateTimePreview();

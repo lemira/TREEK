@@ -2,8 +2,8 @@
 <!DOCTYPE kinstall>	
 <kinstall type="kunena-template" version="4.0" method="upgrade">	
     <name>TreeK</name>
-    <version>2.0</version>
-    <creationDate>2026-07-03</creationDate>
+    <version>2.0.2</version>
+    <creationDate>2026-07-19</creationDate>
     <author>Leonid Ratner</author>
     <authorEmail>lemirat@gmail.com</authorEmail>
     <authorUrl>https://treek.supporte</authorUrl>

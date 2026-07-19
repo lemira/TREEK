@@ -144,6 +144,34 @@ new MutationObserver(function () {
                 initAttachmentsToggle(h2);
             }
         });
+
+        document.querySelectorAll('#kattachments-message-container, #kpost-attachments, #kattach_form').forEach(function (node) {
+            var h2 = findPreviousSectionHeader(node);
+
+            if (h2) {
+                initAttachmentsToggle(h2);
+            }
+        });
+    }
+
+    function findPreviousSectionHeader(node) {
+        var current = node;
+
+        while (current && current !== document.body) {
+            var sibling = current.previousElementSibling;
+
+            while (sibling) {
+                if (sibling.tagName === 'H2') {
+                    return sibling;
+                }
+
+                sibling = sibling.previousElementSibling;
+            }
+
+            current = current.parentElement;
+        }
+
+        return null;
     }
 
     /* ================================================================
@@ -207,7 +235,15 @@ new MutationObserver(function () {
             m.addedNodes.forEach(function (node) {
                 if (node.nodeType !== 1) return;
                 if (node.querySelector && node.querySelector('.kbutton-reply, .kbutton-quote, .kbutton-edit')) needAction = true;
-                if (node.tagName === 'H2' || (node.querySelector && node.querySelector('h2'))) needAttach = true;
+                if (
+                    node.tagName === 'H2' ||
+                    (node.querySelector && node.querySelector('h2, #kattachments-message-container, #kpost-attachments, #kattach_form')) ||
+                    node.id === 'kattachments-message-container' ||
+                    node.id === 'kpost-attachments' ||
+                    node.id === 'kattach_form'
+                ) {
+                    needAttach = true;
+                }
             });
         });
         if (needAction && isFeatureEnabled('inline_action_buttons')) initActionButtons();

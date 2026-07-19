@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <changelogs>
+
+    <changelog>
+    <element>pkg_treek</element>
+    <type>package</type>
+    <version>2.0.2</version>
+    <change>
+        <item>Redesigned Heavy grid as CSS tree lines with continuous vertical branches and hover highlighting.</item>
+        <item>Added a text excerpt frame option under Post excerpt - text.</item>
+        <item>Text post excerpts can now be shown either without a frame or with a compact framed bubble.</item>
+    </change>
+    <fix>
+        <item>Heavy grid now keeps visual branches for posts whose original parent is no longer visible in the current topic after moderation.</item>
+    </fix>
+</changelog>
+    
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>

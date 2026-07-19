@@ -32,6 +32,10 @@ Use the settings button in the tree window to adjust the visible tree.
 Install the new package over the old one using Joomla extension installer. User
 settings are preserved.
 
+Normally, TreeK does not need to be uninstalled before updating. Uninstalling is
+only needed when you want to remove TreeK completely, reset its extension state,
+or restore Kunena files from a backup.
+
 ## Troubleshooting
 
 If the tree does not open:

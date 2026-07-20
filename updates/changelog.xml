@@ -3,6 +3,19 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.3</version>
+        <fix>
+            <item>Fixed TreeK Free update metadata so Joomla can match the package update site correctly.</item>
+            <item>Changed the package download URL to the GitHub latest-release download endpoint.</item>
+        </fix>
+        <note>
+            <item>If an older installation does not show TreeK Free updates, install version 2.0.3 manually once. Automatic updates should work after that.</item>
+        </note>
+    </changelog>
+    
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.2</version>
         <change>
             <item>Redesigned Heavy grid as CSS tree lines with continuous vertical branches and hover highlighting.</item>

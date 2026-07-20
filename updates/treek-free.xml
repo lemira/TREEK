@@ -10,6 +10,7 @@
         <downloads>
             <downloadurl type="full" format="zip">https://github.com/lemira/TREEK/releases/latest/download/pkg_treek_free.zip</downloadurl>
         </downloads>
+        <sha256>408D28BA74F73BDD29ECF1E8B274A2DB76D85436684C376CB04C2D3842F20508</sha256>
         <changelogurl>https://raw.githubusercontent.com/lemira/TREEK/main/updates/changelog.xml</changelogurl>
         <tags>
             <tag>stable</tag>

@@ -3,6 +3,14 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.4</version>
+        <change>
+            <item>The TreeK settings panel now opens automatically when the TreeK window is opened.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.3</version>
         <fix>
             <item>Fixed TreeK Free update metadata so Joomla can match the package update site correctly.</item>
@@ -12,7 +20,6 @@
             <item>If an older installation does not show TreeK Free updates, install version 2.0.3 manually once. Automatic updates should work after that.</item>
         </note>
     </changelog>
-    
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
@@ -26,7 +33,6 @@
             <item>Heavy grid now keeps visual branches for posts whose original parent is no longer visible in the current topic after moderation.</item>
         </fix>
     </changelog>
-
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>

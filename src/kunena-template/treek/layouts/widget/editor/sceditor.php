@@ -13,12 +13,38 @@
 
 defined('_JEXEC') or die();
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Language\LanguageHelper;
 use Joomla\CMS\Language\Text;
 use Kunena\Forum\Libraries\Html\KunenaParser;
 use Kunena\Forum\Libraries\Route\KunenaRoute;
 use Joomla\CMS\Uri\Uri;
 use Kunena\Forum\Libraries\Template\KunenaTemplate;
+
+$user         = Factory::getApplication()->getIdentity();
+$userLanguage = $user->getParam('language', 'default');
+
+if (!LanguageHelper::exists($userLanguage)) {
+    $userLanguage = 'default';
+}
+
+$joomlaLanguage = Factory::getApplication()->getLanguage()->getLocale();
+$jlang          = substr($joomlaLanguage[2], 0, 2);
+
+if ($userLanguage != 'default' && $userLanguage != 'active') {
+    $ulang = substr($userLanguage, 0, 2);
+
+    if (is_file('media/kunena/core/js/sceditor/languages/' . $ulang . '.js')) {
+        $this->wa->registerAndUseScript('sceditor/sclang', 'media/kunena/core/js/sceditor/languages/' . $ulang . '.js');
+        $this->doc->addScriptOptions('com_kunena.sceditor_userdefaultlanguage', $ulang);
+    }
+} elseif (is_file('media/kunena/core/js/sceditor/languages/' . $jlang . '.js')) {
+    $this->wa->registerAndUseScript('sceditor/sclang', 'media/kunena/core/js/sceditor/languages/' . $jlang . '.js');
+    $this->doc->addScriptOptions('com_kunena.sceditor_joomladefaultlanguage', $jlang);
+} else {
+    $this->doc->addScriptOptions('com_kunena.sceditor_joomladefaultlanguage', '');
+}
 
 $this->wa->registerAndUseScript('sceditor/sceditor', 'media/kunena/core/js/sceditor/sceditor.js')
     ->registerAndUseScript('sceditor/bbcode', 'media/kunena/core/js/sceditor/bbcode.js')
@@ -59,7 +85,7 @@ $this->doc->addScriptOptions('com_kunena.template_editor_buttons_configuration',
 $this->doc->addScriptOptions('com_kunena.root_path', Uri::root(true));
 $this->doc->addScriptOptions('com_kunena.editor_emoticons', json_encode(KunenaParser::getEmoticons(0, 1, 0)));
 
-$this->wa->registerAndUseScript('sceditor', 'components/com_kunena/template/aurelia/assets/js/sceditor.js');
+$this->wa->registerAndUseScript('sceditor', 'components/com_kunena/template/treek/assets/js/sceditor.js');
 HTMLHelper::_('bootstrap.tab');
 // Echo $this->subLayout('Widget/Datepicker');
 

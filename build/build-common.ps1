@@ -46,6 +46,11 @@ function Set-PackageUpdateServer {
     } else {
         'https://treek.support/updates/treek-pro.xml'
     }
+    $changelogUrl = if ($Edition -eq 'Free') {
+        'https://raw.githubusercontent.com/lemira/TREEK/main/updates/changelog.xml'
+    } else {
+        'https://treek.support/updates/changelog-pro.xml'
+    }
 
     $updateservers = @"
     <updateservers>
@@ -55,10 +60,24 @@ function Set-PackageUpdateServer {
 
     $content = Get-Content -LiteralPath $ManifestPath -Raw
 
+    if ($content -match '(?s)\s*<changelogurl>.*?</changelogurl>') {
+        $content = [regex]::Replace($content, '(?s)\s*<changelogurl>.*?</changelogurl>', "`r`n    <changelogurl>$changelogUrl</changelogurl>", 1)
+    } else {
+        $content = $content -replace '\s*<updateservers>', "`r`n    <changelogurl>$changelogUrl</changelogurl>`r`n`r`n    <updateservers>"
+    }
+
     if ($content -match '(?s)\s*<updateservers>.*?</updateservers>') {
         $content = [regex]::Replace($content, '(?s)\s*<updateservers>.*?</updateservers>', "`r`n$updateservers", 1)
     } else {
         $content = $content -replace '\s*</extension>\s*$', "`r`n$updateservers`r`n`r`n</extension>`r`n"
+    }
+
+    if ($Edition -eq 'Pro') {
+        if ($content -notmatch '<dlid\b') {
+            $content = $content -replace '\s*</extension>\s*$', "`r`n    <dlid prefix=`"dlid=`" suffix=`"`" />`r`n`r`n</extension>`r`n"
+        }
+    } else {
+        $content = [regex]::Replace($content, '(?s)\s*<dlid\b[^>]*/>', '', 1)
     }
 
     Set-Content -LiteralPath $ManifestPath -Value $content -Encoding utf8

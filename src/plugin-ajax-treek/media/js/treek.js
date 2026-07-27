@@ -85,6 +85,7 @@ const fallbackLangs = {
     TREEK_PRO_LOCK_SYMBOL: 'Lock',
     TREEK_PRO_OPTIONS: 'Pro options',
     TREEK_PRO_LOCKED: 'Available in Pro',
+    TREEK_REGISTERED_ONLY: 'Available for registered users',
     TREEK_TEST_PRO: 'Test TreeK Pro',
     TREEK_SET_FORUM_VIEW: 'Forum view',
     TREEK_SET_PARENT_POST_NAVIGATION: 'Parent post arrow',
@@ -1132,6 +1133,7 @@ function resolveParentLink(link, allowTokenRefresh = true) {
                         <!-- TREEK-PRO-START: settings_persistence -->
                         <button type="button" class="treek-settings-save-params" title="${_('TREEK_SAVE_PARAMS_TITLE')}" style="display:none; background:none; border:none; cursor:pointer; font-size:15px; padding:0 4px;">${_('TREEK_SAVE_PARAMS_SYMBOL')}</button>
                         <button type="button" class="treek-settings-restore-params" title="${_('TREEK_RESTORE_PARAMS_TITLE')}" style="display:none; background:none; border:none; cursor:pointer; font-size:15px; padding:0 4px;">${_('TREEK_RESTORE_PARAMS_SYMBOL')}</button>
+                        <button type="button" class="treek-settings-save-params-guest" title="${_('TREEK_REGISTERED_ONLY')}" aria-disabled="true" style="display:none; background:none; border:1px solid #bbb; border-radius:4px; color:#777; cursor:default; font-size:12px; padding:1px 5px;">${_('TREEK_SAVE_PARAMS_SYMBOL')}</button>
                         <!-- TREEK-PRO-END: settings_persistence -->
                         <button type="button" class="treek-settings-close" style="background:none; border:none; cursor:pointer; font-size:16px; padding:0 6px;">${_('TREEK_CLOSE')}</button>
                     </div>
@@ -1230,7 +1232,7 @@ ${renderInlineLockedProOption(_('TREEK_SET_COMFORT_TOOLS'), _('TREEK_SET_NAV_TOO
 <!-- TREEK-PRO-START: treek_view_settings -->
 <div class="treek-settings-group" style="padding: 10px 12px;">
     <div class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:4px 0;">
-        <input type="checkbox" name="tr_forum_view" ${showForumViewSettings ? 'checked' : ''}> <strong>${_('TREEK_SET_FORUM_VIEW')}</strong>
+        <input type="checkbox" name="tr_forum_view" ${showForumViewSettings ? 'checked' : ''} title="${_('TREEK_REGISTERED_ONLY')}"> <strong>${_('TREEK_SET_FORUM_VIEW')}</strong>
     </div>
     <div id="treek_forum_view_setup" style="margin-left:22px; margin-top:4px; display:${showForumViewSettings ? 'block' : 'none'}; font-size:12px; color:#444;">
         <label class="treek-opt" style="display:flex; align-items:center; gap:8px; padding:3px 0;"><input type="checkbox" name="tv_parent_post_navigation" ${treekViewFeatures.parent_post_navigation ? 'checked' : ''}> ${_('TREEK_SET_PARENT_POST_NAVIGATION')} ${_('TREEK_NAV_TO_PARENT_IN_TREE_SYMBOL')}</label>
@@ -1282,7 +1284,7 @@ if (activePostId) {
     activateTreeRow(activePostId);
 }
 
-if (options.openSettings) {
+if (options.openSettings !== false) {
     openSettingsPanel();
 }
 
@@ -1604,16 +1606,47 @@ function exportTreeToClipboard(format) {
         const saveBtn = currentPopover.querySelector('.treek-settings-save-params');
         const restoreBtn = currentPopover.querySelector('.treek-settings-restore-params');
         const lockedSaveBtn = currentPopover.querySelector('.treek-settings-save-params-locked');
+        const guestSaveBtn = currentPopover.querySelector('.treek-settings-save-params-guest');
 
         if (TREEK_EDITION === 'free') {
             if (saveBtn) saveBtn.style.display = 'none';
             if (restoreBtn) restoreBtn.style.display = 'none';
             if (lockedSaveBtn) lockedSaveBtn.classList.toggle('treek-pro-preview-hidden', !showProPreview);
+            if (guestSaveBtn) guestSaveBtn.style.display = 'none';
             return;
         }
 
         if (saveBtn) saveBtn.style.display = userParams.canSave ? 'inline-block' : 'none';
         if (restoreBtn) restoreBtn.style.display = (userParams.canSave && userParams.hasSaved) ? 'inline-block' : 'none';
+        if (guestSaveBtn) guestSaveBtn.style.display = userParams.canSave ? 'none' : 'inline-block';
+        syncRegisteredOnlyControls();
+    }
+
+    function syncRegisteredOnlyControls() {
+        if (!currentPopover || TREEK_EDITION !== 'pro') return;
+
+        const canSave = !!cachedData?.userParams?.canSave;
+        const disabledTitle = _('TREEK_REGISTERED_ONLY');
+        const names = [
+            'tr_forum_view',
+            'tv_parent_post_navigation',
+            'tv_reply_form_treek_look',
+            'tv_subject_suffix',
+            'tv_attachments_toggle',
+            'tv_inline_action_buttons'
+        ];
+
+        names.forEach(name => {
+            currentPopover.querySelectorAll(`[name="${name}"]`).forEach(input => {
+                input.disabled = !canSave;
+                input.title = canSave ? '' : disabledTitle;
+                const label = input.closest('label, .treek-opt');
+                if (label) {
+                    label.title = canSave ? '' : disabledTitle;
+                    label.classList.toggle('treek-registered-only-disabled', !canSave);
+                }
+            });
+        });
     }
 
     function fetchUserParamsTask(task, payload = null, allowTokenRefresh = true) {
@@ -1806,6 +1839,7 @@ function exportTreeToClipboard(format) {
         // TREEK-PRO-END: treek_view_settings
 
         updateDateTimePreview();
+        syncRegisteredOnlyControls();
     }
 
     // TREEK-PRO-START: settings_drag
@@ -2092,6 +2126,11 @@ if (e.target.closest('.treek-settings-save-params')) {
 
         document.addEventListener('change', function(e) {
             if (!currentPopover || !e.target.name) return;
+            if (TREEK_EDITION === 'pro' && !cachedData?.userParams?.canSave && (e.target.name === 'tr_forum_view' || e.target.name.startsWith('tv_'))) {
+                e.preventDefault();
+                syncSettingsControls();
+                return;
+            }
 
             // TREEK-PRO-START: flat_view
             if (e.target.name === 'tr_view') state.view = e.target.value;

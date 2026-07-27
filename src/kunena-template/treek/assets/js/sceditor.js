@@ -702,6 +702,8 @@ jQuery(document).ready(function ($) {
 		{
 			toolbar_buttons = 'bold,italic,underline,strike,subscript,superscript|left,center,right,justify|font,size,color,removeformat|cut,copy,paste|bulletlist,orderedlist|table,code,quote,image,link,unlink,emoticon,video,map,x_social,instagram,ebay,soundcloud,poll|source';
 		}
+
+		var toolbar_buttons_private = toolbar_buttons.replace('emoticon','email|emoticon');
 	
 		var emoticons = Joomla.getOptions('com_kunena.ckeditor_emoticons');
 		var obj = jQuery.parseJSON( emoticons );
@@ -714,6 +716,7 @@ jQuery(document).ready(function ($) {
 		sceditor.create(textarea, {
 			format: 'bbcode',
 			toolbar: toolbar_buttons,
+			locale: Joomla.getOptions('com_kunena.sceditor_userdefaultlanguage') || Joomla.getOptions('com_kunena.sceditor_joomladefaultlanguage'),
 			style: Joomla.getOptions('com_kunena.sceditor_style_path'),
 			emoticonsRoot: Joomla.getOptions('com_kunena.root_path')+'/media/kunena/emoticons/',
 			emoticons: {
@@ -761,7 +764,8 @@ jQuery(document).ready(function ($) {
 
 		sceditor.create(textarea_private, {
 			format: 'bbcode',
-			toolbar: toolbar_buttons,
+			toolbar: toolbar_buttons_private,
+			locale: Joomla.getOptions('com_kunena.sceditor_userdefaultlanguage') || Joomla.getOptions('com_kunena.sceditor_joomladefaultlanguage'),
 			style: Joomla.getOptions('com_kunena.sceditor_style_path'),
 			emoticonsRoot: Joomla.getOptions('com_kunena.root_path')+'/media/kunena/emoticons/',
 			emoticons: {

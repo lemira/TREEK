@@ -17,6 +17,7 @@ namespace Kunena\Forum\Site;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Session\Session;
 use Kunena\Forum\Libraries\Route\KunenaRoute;
 
 if ($this->category->allowRatings) :
@@ -26,10 +27,11 @@ if ($this->category->allowRatings) :
         ->registerAndUseScript('krating', 'media/kunena/core/js/krating.js'); ?>
 
     <input id="topic_id" type="hidden" value="<?php echo $this->topic->id; ?>"/>
+    <input id="catid" type="hidden" value="<?php echo $this->category->id; ?>"/>
     <input type="hidden" id="krating_url" name="krating_url"
-           value="<?php echo KunenaRoute::_('index.php?option=com_kunena&view=topic&task=loadrate&format=json'); ?>"/>
+           value="<?php echo KunenaRoute::_('index.php?option=com_kunena&view=topic&task=loadrate&format=json&' . Session::getFormToken() . '=1'); ?>"/>
     <input type="hidden" id="krating_submit_url" name="url"
-           value="<?php echo KunenaRoute::_('index.php?option=com_kunena&view=topic&task=setrate&topic_id=' . $this->topic->id . '&format=json'); ?>"/>
+           value="<?php echo KunenaRoute::_('index.php?option=com_kunena&view=topic&task=setrate&topic_id=' . $this->topic->id . '&format=json&' . Session::getFormToken() . '=1'); ?>"/>
     <div id="krating"
          data-bs-toggle="tooltip" title="<?php echo Text::sprintf('COM_KUNENA_RATE_TOOLTIP', $this->topic->rating, $this->topic->getReviewCount()); ?>"
          class="hasTooltip">

@@ -84,7 +84,7 @@ class KunenaTemplatetreek extends KunenaTemplate
             Factory::getLanguage()->load('plg_ajax_treek', JPATH_PLUGINS . '/ajax/treek', null, true);
 
             // Подключаем стили и скрипт TreeK
-            $doc->addStyleSheet('media/plg_ajax_treek/css/treek.css');
+            $doc->addStyleSheet('media/plg_ajax_treek/css/treek.css?v=' . time());
             $doc->addScript('media/plg_ajax_treek/js/treek.js?v=' . time());
 
             $treekViewFeatures = json_encode($this->loadTreekViewFeatures(), JSON_UNESCAPED_UNICODE);

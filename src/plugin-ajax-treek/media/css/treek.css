@@ -452,6 +452,15 @@
     font-size: 11px !important;
 }
 
+.treek-registered-only-disabled {
+    color: #777 !important;
+    cursor: help !important;
+}
+
+.treek-registered-only-disabled input {
+    cursor: help !important;
+}
+
 .treek-row__tab {
     display: inline-block !important;
     flex: 0 0 auto !important;

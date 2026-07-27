@@ -20,6 +20,7 @@ use Kunena\Forum\Libraries\Config\KunenaConfig;
 use Kunena\Forum\Libraries\Factory\KunenaFactory;
 use Kunena\Forum\Libraries\Icons\KunenaIcons;
 use Kunena\Forum\Libraries\Template\KunenaTemplate;
+use Joomla\CMS\Session\Session;
 
 $this->addStyleSheet('rating.css');
 
@@ -34,6 +35,9 @@ $avatar          = $config->avatarOnCategory ? $topic->getLastPostAuthor()->getA
 $cols            = empty($this->checkbox) ? 5 : 6;
 $txt             = $topic->getActions();
 $topicPages      = $topic->getPagination(null, KunenaConfig::getInstance()->messagesPerPage, 3);
+$treekTopicId    = $topic->id;
+$treekToken      = Session::getFormToken();
+$treekTopicUrl   = $topic->getUrl(null, false);
 
 ?>
 <tr class="category<?php echo $this->escape($category->class_sfx) . $txt; ?>">
@@ -136,7 +140,23 @@ $topicPages      = $topic->getPagination(null, KunenaConfig::getInstance()->mess
     </td>
 
     <td class="d-none d-md-table-cell">
-        <div class="replies"><?php echo Text::_('COM_KUNENA_GEN_REPLIES'); ?>:<span class="repliesnum"><?php echo $this->formatLargeNumber($topic->getReplies()); ?></span></div>
+        <div class="replies">
+            <?php echo Text::_('COM_KUNENA_GEN_REPLIES'); ?>:
+            <?php
+            $repliesCount = (int) $topic->getReplies();
+            if ($repliesCount > 0) : ?>
+                <button type="button"
+                        class="treek-trigger"
+                        data-topic-id="<?php echo $treekTopicId; ?>"
+                        data-token="<?php echo $treekToken; ?>"
+                        data-topic-url="<?php echo $this->escape($treekTopicUrl); ?>"
+                        title="<?php echo Text::_('TREEK_SHOW_TREE_TOOLTIP'); ?>">
+                    <span class="repliesnum"><?php echo $this->formatLargeNumber($repliesCount); ?></span>
+                </button>
+            <?php else : ?>
+                <span class="repliesnum"><?php echo $this->formatLargeNumber($repliesCount); ?></span>
+            <?php endif; ?>
+        </div>
         <div class="views"><?php echo Text::_('COM_KUNENA_GEN_HITS'); ?>:<span class="viewsnum"><?php echo $this->formatLargeNumber($topic->hits); ?></span></div>
     </td>
 

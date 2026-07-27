@@ -115,7 +115,13 @@ class TopicController extends KunenaController
             throw new RuntimeException(Text::_('Forbidden'), 403);
         }
 
-        $mes_id      = $this->input->getInt('mes_id', 0);
+        $mes_id = $this->input->getInt('mes_id', 0);
+        $message = KunenaMessageHelper::get($mes_id);
+
+        if (!$message->isAuthorised('read')) {
+            throw new RuntimeException(Text::_('Not allowed'), 403);
+        }
+
         $attachments = KunenaAttachmentHelper::getByMessage($mes_id);
         $list        = [];
 
@@ -158,6 +164,10 @@ class TopicController extends KunenaController
      */
     public function setinline()
     {
+        if (!Session::checkToken('request')) {
+            throw new RuntimeException(Text::_('Forbidden'), 403);
+        }
+
         $attachs_id = $this->input->getString('files_id', '');
         $attachs_id = json_decode($attachs_id);
 
@@ -273,6 +283,10 @@ class TopicController extends KunenaController
      */
     public function removeinlineonattachment()
     {
+        if (!Session::checkToken('request')) {
+            throw new RuntimeException(Text::_('Forbidden'), 403);
+        }
+
         $attach_id = $this->input->getInt('file_id', 0);
 
         $instance = KunenaAttachmentHelper::get($attach_id);
@@ -291,7 +305,9 @@ class TopicController extends KunenaController
      */
     protected function checkpermissions($attachment_userid)
     {
-        if (KunenaUserHelper::getMyself()->userid != $attachment_userid || !KunenaUserHelper::getMyself()->isAdmin() || !KunenaUserHelper::getMyself()->isModerator()) {
+        $me = KunenaUserHelper::getMyself();
+
+        if ($me->userid != $attachment_userid && !$me->isAdmin() && !$me->isModerator()) {
             throw new RuntimeException(Text::_('Forbidden'), 403);
         }
     }
@@ -359,6 +375,10 @@ class TopicController extends KunenaController
      */
     public function categorytemplate()
     {
+        if (!Session::checkToken('get')) {
+            throw new RuntimeException(Text::_('Forbidden'), 403);
+        }
+
         $catid    = $this->app->getInput()->getInt('catid', 0);
 
         $category = KunenaCategoryHelper::get($catid);
@@ -389,6 +409,10 @@ class TopicController extends KunenaController
      */
     public function loadrate()
     {
+        if (!Session::checkToken('get')) {
+            throw new RuntimeException(Text::_('Forbidden'), 403);
+        }
+
         $user = $this->app->getIdentity();
 
         $topicid  = $this->app->getInput()->get('topic_id', 0, 'int');
@@ -425,10 +449,19 @@ class TopicController extends KunenaController
      */
     public function setrate()
     {
+        if (!Session::checkToken('request')) {
+            throw new RuntimeException(Text::_('JINVALID_TOKEN'), 403);
+        }
+
         $starid   = $this->app->getInput()->get('starid', 0, 'int');
         $topicid  = $this->app->getInput()->get('topic_id', 0, 'int');
+        $catid    = $this->app->input->get('catid', 0, 'int');
         $response = [];
         $user     = KunenaUserHelper::getMyself();
+
+        if (!$this->config->ratingEnabled || !KunenaCategoryHelper::get($catid)->allowRatings) {
+            throw new RuntimeException(Text::_('Bad Request'), 400);
+        }
 
         if ($user->exists() || $this->config->ratingEnabled) {
             $rate           = KunenaRateHelper::get($topicid);

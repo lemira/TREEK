@@ -2,8 +2,8 @@
 <extension type="package" version="4.0" method="upgrade">
     <name>TreeK</name>
     <packagename>treek</packagename>
-    <version>2.0.2</version>
-    <creationDate>2026-07-19</creationDate>
+    <version>2.0.5</version>
+    <creationDate>2026-07-27</creationDate>
     <author>Leonid Ratner</author>
     <authorEmail>lemirat@gmail.com</authorEmail>
     <copyright>Copyright (C) 2026 Leonid Ratner. All rights reserved.</copyright>
@@ -33,3 +33,4 @@
     </updateservers>
 
 </extension>
+

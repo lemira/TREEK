@@ -34,6 +34,9 @@ TreeK Pro is distributed separately. It can be fully tested on the project site,
 
 https://treek.support/index.php/forum/examples-of-trees-on-forums/1-example-of-tree
 
+TreeK Pro requests may include up to two website URLs. These URLs are used to
+manage paid downloads, update access, and support records.
+
 Details and Pro requests are available at:
 
 https://treek.support
@@ -43,7 +46,6 @@ https://treek.support
 - [Installation](docs/installation.md)
 - [Free vs Pro](docs/free-vs-pro.md)
 - [Changelog](docs/changelog.md)
-- [JED description draft](docs/jed-description-draft.md)
 
 ## Project Site
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.6
+
+- Added compatibility updates for Kunena 7.0.8.
+- Clarified that TreeK should be installed again after updating Kunena.
+
 ## 2.0.2
 
 - Redesigned Heavy grid as CSS tree lines with continuous vertical branches.

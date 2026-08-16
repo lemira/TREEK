@@ -3,6 +3,15 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.6</version>
+        <change>
+            <item>Added compatibility updates for Kunena 7.0.8.</item>
+            <item>Updated TreeK documentation to clarify that TreeK should be installed again after a Kunena update.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.5</version>
         <change>
             <item>Added compatibility updates for Kunena 7.0.6 and 7.0.7.</item>

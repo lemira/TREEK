@@ -5,7 +5,7 @@ TreeK is installed as a Joomla package.
 ## Requirements
 
 TreeK has been tested and works on Joomla 6.0.x or 6.1.x and Kunena Forum 7.0.4
-and 7.0.5. Installing TreeK on other builds likely works, but it is not
+through 7.0.8. Installing TreeK on other builds likely works, but it is not
 officially announced, as extensive testing has not been performed on them. If
 necessary, please contact the developer via the website:
 
@@ -36,6 +36,9 @@ Normally, TreeK does not need to be uninstalled before updating. Uninstalling is
 only needed when you want to remove TreeK completely, reset its extension state,
 or restore Kunena files from a backup.
 
+If Kunena is updated, install or update TreeK again after the Kunena update.
+Kunena updates can replace files that TreeK patches during installation.
+
 ## Troubleshooting
 
 If the tree does not open:
@@ -44,6 +47,5 @@ If the tree does not open:
 - confirm that Kunena is installed and working;
 - clear Joomla and browser cache;
 - check whether the current Kunena template is TreeK.
-
 
 

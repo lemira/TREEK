@@ -12,6 +12,9 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Session\Session;
+// TREEK-PRO-START: pro_update_site_binding
+use Joomla\CMS\Uri\Uri;
+// TREEK-PRO-END: pro_update_site_binding
 
 require_once __DIR__ . '/src/Model/TreekModel.php';
 
@@ -31,6 +34,10 @@ class PlgAjaxTreek extends CMSPlugin
         $task = $app->input->getCmd('task', '');
         $topicId = $app->input->getInt('topic_id', 0);
         $requestToken = $this->getRequestTokenName();
+
+        // TREEK-PRO-START: pro_update_site_binding
+        $this->syncProUpdateSiteQuery();
+        // TREEK-PRO-END: pro_update_site_binding
 
         if ($task !== 'signature') {
             $this->debugAjaxLog('request', [
@@ -655,6 +662,92 @@ class PlgAjaxTreek extends CMSPlugin
 
         return in_array(strtolower(trim((string) $value)), ['1', 'true', 'yes', 'on'], true);
     }
+
+    // TREEK-PRO-START: pro_update_site_binding
+    private function syncProUpdateSiteQuery(): void
+    {
+        static $done = false;
+
+        if ($done) {
+            return;
+        }
+
+        $done = true;
+
+        try {
+            $db = Factory::getDbo();
+            $siteUrl = $this->getCurrentSiteOrigin();
+
+            if ($siteUrl === '') {
+                return;
+            }
+
+            $query = $db->getQuery(true)
+                ->select([
+                    $db->quoteName('update_site_id'),
+                    $db->quoteName('extra_query'),
+                ])
+                ->from($db->quoteName('#__update_sites'))
+                ->where(
+                    '('
+                    . $db->quoteName('name') . ' = ' . $db->quote('TreeK Pro Updates')
+                    . ' OR '
+                    . $db->quoteName('location') . ' = ' . $db->quote('https://treek.support/updates/treek-pro.xml')
+                    . ')'
+                )
+                ->setLimit(1);
+
+            $db->setQuery($query);
+            $row = $db->loadObject();
+
+            if (!$row) {
+                return;
+            }
+
+            $params = [];
+            $extraQuery = html_entity_decode((string) $row->extra_query, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+            if ($extraQuery !== '') {
+                parse_str($extraQuery, $params);
+            }
+
+            if (($params['site'] ?? '') === $siteUrl) {
+                return;
+            }
+
+            $params['site'] = $siteUrl;
+            $newExtraQuery = http_build_query($params, '', '&', PHP_QUERY_RFC3986);
+
+            $query = $db->getQuery(true)
+                ->update($db->quoteName('#__update_sites'))
+                ->set($db->quoteName('extra_query') . ' = ' . $db->quote($newExtraQuery))
+                ->where($db->quoteName('update_site_id') . ' = ' . (int) $row->update_site_id);
+
+            $db->setQuery($query);
+            $db->execute();
+        } catch (\Throwable $e) {
+            $this->debugAjaxLog('pro_update_site_bind_failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function getCurrentSiteOrigin(): string
+    {
+        $uri = Uri::getInstance(Uri::root());
+        $scheme = strtolower((string) $uri->getScheme());
+        $host = strtolower(rtrim((string) $uri->getHost(), '.'));
+
+        if ($scheme !== 'https' || $host === '') {
+            return '';
+        }
+
+        $port = (int) $uri->getPort();
+        $portPart = ($port > 0 && $port !== 443) ? ':' . $port : '';
+
+        return 'https://' . $host . $portPart;
+    }
+    // TREEK-PRO-END: pro_update_site_binding
 
     private function getRequestTokenName(): string
     {

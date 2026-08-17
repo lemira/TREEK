@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.7
+
+- Fixed TreeK AJAX URL generation when Joomla is installed in a subdirectory.
+- Changed the TreeK installation log to English.
+- Added AJAX diagnostics instructions to the installation documentation.
+
 ## 2.0.6
 
 - Added compatibility updates for Kunena 7.0.8.

@@ -3,6 +3,18 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.7</version>
+        <fix>
+            <item>Fixed TreeK AJAX URL generation when Joomla is installed in a subdirectory.</item>
+        </fix>
+        <change>
+            <item>Changed the TreeK installation log to English.</item>
+            <item>Added AJAX diagnostics instructions to the installation documentation.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.6</version>
         <change>
             <item>Added compatibility updates for Kunena 7.0.8.</item>

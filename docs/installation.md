@@ -48,4 +48,23 @@ If the tree does not open:
 - clear Joomla and browser cache;
 - check whether the current Kunena template is TreeK.
 
+### AJAX Diagnostics
+
+If the tree still does not open, enable **Debug AJAX log** in the **Treek -
+Add-on for Kunena Forum** plugin settings. Then open a Kunena topic and click
+the TreeK icon once to reproduce the problem.
+
+TreeK writes AJAX diagnostics to:
+
+```text
+administrator/logs/treek_ajax.php
+```
+
+If your Joomla log folder has been changed, use the path shown in **System ->
+Global Configuration -> System -> Path to Log Folder**.
+
+The `treek_install.php` file is only the installation/update log. It is not the
+AJAX diagnostic log.
+
+After testing, disable **Debug AJAX log** again.
 

@@ -83,7 +83,7 @@ public function preflight($type, $parent)
 {
     $this->loadTreekLanguage();
 
-    $this->log('Начало preflight. Тип: ' . $type);
+    $this->log('Starting preflight. Type: ' . $type);
 
     if ($type === 'uninstall') {
         if ($this->isTreekDefaultKunenaTemplate()) {
@@ -109,7 +109,7 @@ public function preflight($type, $parent)
         }
         
         $kunenaVersion = $this->getKunenaVersion();
-        $this->log('Версия Kunena: ' . $kunenaVersion);
+        $this->log('Kunena version: ' . $kunenaVersion);
         
         if (version_compare($kunenaVersion, $this->minimumKunena, '<')) {
             $msg = Text::sprintf('PKG_TREEK_ERROR_KUNENA_VERSION', $this->minimumKunena);
@@ -118,7 +118,7 @@ public function preflight($type, $parent)
             return false;
         }
         
-        $this->log('preflight успешен');
+        $this->log('Preflight completed successfully');
         return true;
     }
 
@@ -126,7 +126,7 @@ public function preflight($type, $parent)
     {
         $this->loadTreekLanguage();
 
-        $this->log('Начало установки TreeK');
+        $this->log('Starting TreeK installation');
        
         if (!$this->installKunenaTemplate($parent)) {
             return false;
@@ -145,7 +145,7 @@ if (!$this->createGlobalParametersTable()) {
     return false;
 }
         
-        $this->log('Установка TreeK завершена успешно');
+        $this->log('TreeK installation completed successfully');
         
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_SUCCESS_INSTALL'), 'success');
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_POSTINSTALL_INFO'), 'notice');
@@ -159,7 +159,7 @@ if (!$this->createGlobalParametersTable()) {
 {
     $this->loadTreekLanguage();
 
-    $this->log('Начало обновления TreeK');
+    $this->log('Starting TreeK update');
 
     return $this->install($parent);
 }
@@ -168,7 +168,7 @@ public function uninstall($parent)
 {
     $this->loadTreekLanguage();
 
-    $this->log('Начало удаления TreeK');
+    $this->log('Starting TreeK uninstall');
 
     $this->restoreOriginalFiles();
 
@@ -180,7 +180,7 @@ public function uninstall($parent)
 
     $this->cleanupBackups();
 
-    $this->log('Удаление TreeK завершено');
+    $this->log('TreeK uninstall completed');
     Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_SUCCESS_UNINSTALL'), 'success');
 
     return true;
@@ -191,7 +191,7 @@ public function uninstall($parent)
         $source = $parent->getParent()->getPath('source') . '/' . $this->paths['kunena_template_source'];
         $target = JPATH_ROOT . '/' . $this->paths['kunena_template_target'];
         
-        $this->log('Установка шаблона Kunena. Источник: ' . $source . ', Цель: ' . $target);
+        $this->log('Installing Kunena template. Source: ' . $source . ', target: ' . $target);
         
         if (!Folder::exists($source)) {
             $msg = Text::_('PKG_TREEK_ERROR_TEMPLATE_NOT_FOUND');
@@ -201,7 +201,7 @@ public function uninstall($parent)
         }
         
         if (Folder::exists($target)) {
-            $this->log('Удаление предыдущей версии шаблона');
+            $this->log('Removing previous template version');
             Folder::delete($target);
         }
         
@@ -212,7 +212,7 @@ public function uninstall($parent)
             return false;
         }
         
-        $this->log('Шаблон успешно установлен');
+        $this->log('Template installed successfully');
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_TEMPLATE_INSTALLED'), 'success');
         return true;
     }
@@ -244,18 +244,18 @@ public function uninstall($parent)
     protected function installOverrides($parent)
     {
         $sourceBase = $parent->getParent()->getPath('source') . '/treek_resources/kunena_overrides';
-        $this->log('Установка переопределений. Базовая папка: ' . $sourceBase);
+        $this->log('Installing overrides. Base folder: ' . $sourceBase);
         
         foreach ($this->paths['overrides'] as $override) {
             $source = $sourceBase . '/' . $override['source'];
             $target = JPATH_ROOT . '/' . $override['target'];
             
-            $this->log('Обработка: ' . $override['source']);
+            $this->log('Processing: ' . $override['source']);
             
             if (!File::exists($source)) {
                 $msg = Text::sprintf('PKG_TREEK_WARNING_SOURCE_NOT_FOUND', $override['source']);
                 Factory::getApplication()->enqueueMessage($msg, 'warning');
-                $this->log('Файл не найден: ' . $source, Log::WARNING);
+                $this->log('File not found: ' . $source, Log::WARNING);
                 continue;
             }
             
@@ -263,12 +263,12 @@ public function uninstall($parent)
                 $backupPath = JPATH_ROOT . '/tmp/' . $this->paths['backup_folder'];
                 if (!Folder::exists($backupPath)) {
                     Folder::create($backupPath);
-                    $this->log('Создана папка бэкапа: ' . $backupPath);
+                    $this->log('Created backup folder: ' . $backupPath);
                 }
                 
                 $backupFile = $backupPath . '/' . str_replace(['/', '\\'], '_', $override['target']);
                 if (File::copy($target, $backupFile)) {
-                    $this->log('Создан бэкап: ' . $backupFile);
+                    $this->log('Created backup: ' . $backupFile);
                 } else {
                     $msg = Text::sprintf('PKG_TREEK_ERROR_BACKUP', $override['target']);
                     Factory::getApplication()->enqueueMessage($msg, 'warning');
@@ -281,7 +281,7 @@ public function uninstall($parent)
                 Factory::getApplication()->enqueueMessage($msg, 'error');
                 $this->log($msg, Log::ERROR);
             } else {
-                $this->log('Файл успешно заменен: ' . $override['target']);
+                $this->log('File replaced successfully: ' . $override['target']);
             }
         }
 
@@ -295,13 +295,13 @@ public function uninstall($parent)
 
         if (!Folder::exists($backupPath)) {
             Folder::create($backupPath);
-            $this->log('Создана папка бэкапа: ' . $backupPath);
+            $this->log('Created backup folder: ' . $backupPath);
         }
 
         $backupFile = $backupPath . '/' . str_replace(['/', '\\'], '_', $targetRelative);
 
         if (File::copy($target, $backupFile)) {
-            $this->log('Создан бэкап: ' . $backupFile);
+            $this->log('Created backup: ' . $backupFile);
         } else {
             $msg = Text::sprintf('PKG_TREEK_ERROR_BACKUP', $targetRelative);
             Factory::getApplication()->enqueueMessage($msg, 'warning');
@@ -312,10 +312,10 @@ public function uninstall($parent)
     protected function restoreOriginalFiles()
     {
         $backupPath = JPATH_ROOT . '/tmp/' . $this->paths['backup_folder'];
-        $this->log('Восстановление оригиналов из: ' . $backupPath);
+        $this->log('Restoring original files from: ' . $backupPath);
         
         if (!Folder::exists($backupPath)) {
-            $this->log('Папка бэкапа не найдена');
+            $this->log('Backup folder not found');
             return true;
         }
         
@@ -324,11 +324,11 @@ public function uninstall($parent)
             $backupFile = $backupPath . '/' . str_replace(['/', '\\'], '_', $override['target']);
             
             if (File::exists($backupFile)) {
-                $this->log('Восстановление: ' . $target);
+                $this->log('Restoring: ' . $target);
                 File::copy($backupFile, $target);
                 File::delete($backupFile);
             } else {
-                $this->log('Бэкап не найден для: ' . $override['target']);
+                $this->log('Backup not found for: ' . $override['target']);
             }
         }
 
@@ -338,7 +338,7 @@ public function uninstall($parent)
     protected function removeKunenaTemplate()
 {
     $target = JPATH_ROOT . '/' . $this->paths['kunena_template_target'];
-    $this->log('Проверка шаблона перед удалением: ' . $target);
+    $this->log('Checking template before uninstall: ' . $target);
 
     if ($this->isTreekDefaultKunenaTemplate()) {
         $msg = Text::_('PKG_TREEK_WARNING_TEMPLATE_DEFAULT');
@@ -352,7 +352,7 @@ public function uninstall($parent)
     }
 
     if (Folder::exists($target)) {
-        $this->log('Удаление папки шаблона');
+        $this->log('Removing template folder');
 
         if (!Folder::delete($target)) {
             $msg = Text::sprintf('PKG_TREEK_ERROR_DELETE_FOLDER', $target);
@@ -362,7 +362,7 @@ public function uninstall($parent)
             return false;
         }
 
-        $this->log('Шаблон успешно удален');
+        $this->log('Template removed successfully');
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_TEMPLATE_REMOVED'), 'success');
     }
 
@@ -373,9 +373,9 @@ public function uninstall($parent)
     {
         $backupPath = JPATH_ROOT . '/tmp/' . $this->paths['backup_folder'];
         if (Folder::exists($backupPath)) {
-            $this->log('Очистка папки бэкапов: ' . $backupPath);
+            $this->log('Cleaning backup folder: ' . $backupPath);
             Folder::delete($backupPath);
-            $this->log('Папка бэкапов удалена');
+            $this->log('Backup folder removed');
         }
     }
 
@@ -429,7 +429,7 @@ $this->ensureUserParametersTableSchema($tableName);
 
 Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_CREATED'), 'notice');
 
-$this->log('Таблица пользовательских параметров TreeK создана или уже существует: ' . $tableName);
+$this->log('TreeK user parameters table created or already exists: ' . $tableName);
 
 return true;
     } catch (\Throwable $e) {
@@ -514,7 +514,7 @@ protected function removeDuplicateUserParameterRows(string $tableName): void
 protected function keepUserParametersTable(): void
 {
     Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_USER_PARAMS_TABLE_KEPT'), 'notice');
-    $this->log('Таблица пользовательских параметров TreeK сохранена');
+    $this->log('TreeK user parameters table preserved');
 }
 
 protected function createGlobalParametersTable(): bool
@@ -545,7 +545,7 @@ protected function createGlobalParametersTable(): bool
         $this->seedGlobalParameters();
 
         Factory::getApplication()->enqueueMessage(Text::_('PKG_TREEK_GLOBAL_PARAMS_TABLE_CREATED'), 'notice');
-        $this->log('Таблица глобальных параметров TreeK создана или уже существует: ' . $tableName);
+        $this->log('TreeK global parameters table created or already exists: ' . $tableName);
 
         return true;
     } catch (\Throwable $e) {

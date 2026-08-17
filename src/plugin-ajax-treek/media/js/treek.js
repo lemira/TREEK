@@ -8,8 +8,14 @@ function buildTreekAjaxUrl() {
         ? (window.Joomla.getOptions('system.paths') || {})
         : {};
 
-    const ajaxPath = String(paths.ajax || '/index.php/component/ajax?format=raw')
+    let ajaxPath = String(paths.ajax || '/index.php/component/ajax?format=raw')
         .replace(/&amp;/g, '&');
+
+    const rootPath = String(paths.root || '').replace(/\/$/, '');
+
+    if (rootPath && ajaxPath.startsWith('/') && !ajaxPath.startsWith(rootPath + '/')) {
+        ajaxPath = rootPath + ajaxPath;
+    }
 
     const url = new URL(ajaxPath, window.location.origin);
 

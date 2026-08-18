@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.8
+
+- Hide TreeK buttons from guests when the TreeK AJAX plugin access level is set to Registered.
+- Documented the TreeK plugin access level behavior.
+
 ## 2.0.7
 
 - Fixed TreeK AJAX URL generation when Joomla is installed in a subdirectory.

@@ -38,6 +38,7 @@ $topicPages      = $topic->getPagination(null, KunenaConfig::getInstance()->mess
 $treekTopicId    = $topic->id;
 $treekToken      = Session::getFormToken();
 $treekTopicUrl   = $topic->getUrl(null, false);
+$treekAvailable  = $this->ktemplate->canUseTreek();
 
 ?>
 <tr class="category<?php echo $this->escape($category->class_sfx) . $txt; ?>">
@@ -144,7 +145,7 @@ $treekTopicUrl   = $topic->getUrl(null, false);
             <?php echo Text::_('COM_KUNENA_GEN_REPLIES'); ?>:
             <?php
             $repliesCount = (int) $topic->getReplies();
-            if ($repliesCount > 0) : ?>
+            if ($treekAvailable && $repliesCount > 0) : ?>
                 <button type="button"
                         class="treek-trigger"
                         data-topic-id="<?php echo $treekTopicId; ?>"

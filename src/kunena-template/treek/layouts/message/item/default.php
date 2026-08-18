@@ -27,6 +27,7 @@ $treekTopicId  = $this->topic->id;
 $treekPostId   = $this->message->id;
 $treekToken    = Session::getFormToken();
 $treekTopicUrl = (string) \Kunena\Forum\Libraries\Route\KunenaRoute::getTopicUrl($this->topic);
+$treekAvailable = $this->ktemplate->canUseTreek();
 
 $message              = $this->message;
 $isReply              = $this->message->id != $this->topic->first_post_id;
@@ -58,7 +59,7 @@ $list = [];
 <div class="shadow-none p-4 mb-5 rounded">
     <div class="mykmsg-header">
         <?php
-        if ($isReply && $this->ktemplate->treekFeature('parent_post_navigation')) {
+        if ($treekAvailable && $isReply && $this->ktemplate->treekFeature('parent_post_navigation')) {
             $arrow = '<a href="#" class="treek-parent-link" data-post-id="' . (int) $message->id . '" data-topic-id="' . (int) $this->topic->id . '" data-token="' . Session::getFormToken() . '" data-bs-toggle="tooltip" '
                 . 'title="' . Text::_('COM_KUNENA_TREEK_GOTO_PARENT') . '">'
                 . Text::_('COM_KUNENA_TREEK_ARROW_UP') . '</a>';
@@ -80,15 +81,17 @@ $list = [];
         }
         ?>
         
-        <button type="button"
-                class="treek-trigger treek-icon-trigger"
-                data-topic-id="<?php echo $treekTopicId; ?>"
-                data-token="<?php echo $treekToken; ?>"
-                data-topic-url="<?php echo $this->escape($treekTopicUrl); ?>"
-                data-current-post-id="<?php echo $treekPostId; ?>"
-                title="<?php echo Text::_('TREEK_SHOW_IN_TREE'); ?>">
-            <?php echo Text::_('TREEK_ICON'); ?>
-        </button>
+        <?php if ($treekAvailable) : ?>
+            <button type="button"
+                    class="treek-trigger treek-icon-trigger"
+                    data-topic-id="<?php echo $treekTopicId; ?>"
+                    data-token="<?php echo $treekToken; ?>"
+                    data-topic-url="<?php echo $this->escape($treekTopicUrl); ?>"
+                    data-current-post-id="<?php echo $treekPostId; ?>"
+                    title="<?php echo Text::_('TREEK_SHOW_IN_TREE'); ?>">
+                <?php echo Text::_('TREEK_ICON'); ?>
+            </button>
+        <?php endif; ?>
         
         <?php if (!empty($this->message->pm) && $this->config->privateMessage) : ?>
             <div class="kmsg">

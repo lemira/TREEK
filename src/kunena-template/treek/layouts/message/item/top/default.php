@@ -34,6 +34,7 @@ $attachs              = $message->getNbAttachments();
 $topicStarter         = $this->topic->first_post_userid == $this->message->userid;
 $subjectlengthmessage = $this->ktemplate->params->get('SubjectLengthMessage', 20);
 $displayAttachments   = false;
+$treekAvailable       = $this->ktemplate->canUseTreek();
 
 foreach ($attachments as $attachment) {
     if (!$attachment->inline) {
@@ -79,7 +80,7 @@ if ($this->config->orderingSystem == 'mesid') {
         <div class="kmessage">
             <div class="mykmsg-header">
                 <?php
-                if ($isReply && $this->ktemplate->treekFeature('parent_post_navigation')) {
+                if ($treekAvailable && $isReply && $this->ktemplate->treekFeature('parent_post_navigation')) {
                     $arrow = '<a href="#" class="treek-parent-link" data-post-id="' . (int) $message->id . '" data-topic-id="' . (int) $this->topic->id . '" data-token="' . Session::getFormToken() . '" data-bs-toggle="tooltip" '
                         . 'title="' . Text::_('COM_KUNENA_TREEK_GOTO_PARENT') . '">'
                         . Text::_('COM_KUNENA_TREEK_ARROW_UP') . '</a>';

@@ -2,8 +2,8 @@
 <extension type="file" version="4.0" method="upgrade">
     <name>TreeK Kunena Integration</name>
     <author>Leonid Ratner</author>
-    <creationDate>2026-08-17</creationDate>
-    <version>2.0.7</version>
+    <creationDate>2026-08-18</creationDate>
+    <version>2.0.8</version>
     <copyright>Copyright (C) 2026 Leonid Ratner. All rights reserved.</copyright>
     <license>GNU General Public License v3.0</license>
     <description>PKG_TREEK_KUNENA_DESCRIPTION</description>

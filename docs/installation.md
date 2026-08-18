@@ -19,6 +19,15 @@ https://treek.support
 4. In **Extensions: Manage**, enable the **Treek - Add-on for Kunena Forum** plugin.
 5. Open **Kunena -> Templates** and activate the TreeK template.
 
+## Access Level
+
+TreeK is normally installed with **Public** access so guests can use the post
+tree.
+
+If you set the **Treek - Add-on for Kunena Forum** plugin access level to
+**Registered**, guests cannot use TreeK. In this case TreeK buttons are hidden
+from guests and remain visible only to logged-in users.
+
 ## After Installation
 
 In Kunena's **Recent Topics** tab, the **Replies** number for topics with responses is clickable and highlighted in color. Clicking this number opens the topic's post tree.
@@ -67,4 +76,3 @@ The `treek_install.php` file is only the installation/update log. It is not the
 AJAX diagnostic log.
 
 After testing, disable **Debug AJAX log** again.
-

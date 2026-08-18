@@ -27,6 +27,7 @@ use Joomla\CMS\Session\Session;
 class KunenaTemplatetreek extends KunenaTemplate
 {
     private ?array $treekViewFeatures = null;
+    private ?bool $treekAvailable = null;
 
     protected $default = ['treek'];
 
@@ -217,6 +218,40 @@ EOF;
         $features = $this->loadTreekViewFeatures();
 
         return !empty($features[$feature]);
+    }
+
+    public function canUseTreek(): bool
+    {
+        if ($this->treekAvailable !== null) {
+            return $this->treekAvailable;
+        }
+
+        try {
+            $db = Factory::getDbo();
+            $query = $db->getQuery(true)
+                ->select([
+                    $db->quoteName('enabled'),
+                    $db->quoteName('access'),
+                ])
+                ->from($db->quoteName('#__extensions'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'))
+                ->where($db->quoteName('folder') . ' = ' . $db->quote('ajax'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('treek'))
+                ->setLimit(1);
+
+            $db->setQuery($query);
+            $plugin = $db->loadObject();
+
+            if (!$plugin || !(int) $plugin->enabled) {
+                return $this->treekAvailable = false;
+            }
+
+            $levels = array_map('intval', Factory::getApplication()->getIdentity()->getAuthorisedViewLevels());
+
+            return $this->treekAvailable = in_array((int) $plugin->access, $levels, true);
+        } catch (\Throwable $e) {
+            return $this->treekAvailable = false;
+        }
     }
 
     private function loadTreekViewFeatures(): array

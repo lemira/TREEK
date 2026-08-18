@@ -32,6 +32,7 @@ $config          = KunenaConfig::getInstance();
 $topicPages      = $topic->getPagination(null, $config->messagesPerPage, 3);
 $author          = $topic->getLastPostAuthor();
 $this->ktemplate = KunenaFactory::getTemplate();
+$treekAvailable  = $this->ktemplate->canUseTreek();
 $avatar          = $author->getAvatarImage($this->ktemplate->params->get('avatarType'), 'thumb');
 $category        = $this->topic->getCategory();
 $txt             = '';
@@ -148,7 +149,7 @@ if (!empty($this->spacing)) : ?>
             <?php echo Text::_('COM_KUNENA_GEN_REPLIES'); ?>:
             <?php
             $repliesCount = (int) $topic->getReplies();
-            if ($repliesCount > 0) : ?>
+            if ($treekAvailable && $repliesCount > 0) : ?>
                 <button type="button"
                         class="treek-trigger"
                         data-topic-id="<?php echo $treekTopicId; ?>"

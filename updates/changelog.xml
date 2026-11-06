@@ -3,6 +3,25 @@
     <changelog>
         <element>pkg_treek</element>
         <type>package</type>
+        <version>2.0.10</version>
+        <fix>
+            <item>Check Kunena topic and category read permission before TreeK AJAX reads.</item>
+            <item>Port Kunena security fixes for controller permissions, tokens and escaped template output.</item>
+            <item>Preserve versioned original-file backups across TreeK reinstalls and verify hashes before restoring them.</item>
+            <item>Restored the TreeK AJAX diagnostic log when Debug AJAX log is enabled in the plugin settings.</item>
+            <item>Added a short troubleshooting checklist and diagnostics link to the tree refresh error message.</item>
+        </fix>
+        <change>
+            <item>Use one package per edition for Kunena 7.0 and 7.1 with automatic selection of integration files.</item>
+            <item>Add the system integration monitor and online compatibility catalog on treek.support, with reminders cleared after verified recovery and update advice shown when a newer Kunena version is available.</item>
+            <item>Support Kunena 7.1 notification queues, pending attachments and editor integration.</item>
+            <item>Updated AJAX diagnostics documentation with the Joomla Logging tab path.</item>
+            <item>Documented Joomla 5.4.7+ compatibility for Kunena 7.0.x.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
         <version>2.0.8</version>
         <change>
             <item>TreeK buttons are now hidden from guests when the TreeK AJAX plugin access level is set to Registered.</item>

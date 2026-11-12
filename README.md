@@ -13,6 +13,9 @@ in the usual way in Kunena.
 
 TreeK is built for Joomla and Kunena Forum.
 
+TreeK Free does not use analytics or send forum posts, user accounts, or browsing activity to TreeK's servers. 
+It contacts treek.support to download template files and check version compatibility.
+
 ## Editions
 
 TreeK is published in two editions:

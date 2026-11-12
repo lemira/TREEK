@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<changelogs>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>3.1.0</version>
+        <addition>
+            <item>Reply to a specific post directly from the tree with a compact text form and optional topic notifications.</item>
+            <item>Edit plain-text posts in the tree. Posts with formatting, a link, or an attachment open in the full forum editor.</item>
+        </addition>
+        <change>
+            <item>Close the tree settings panel after 15 seconds of inactivity by default. Administrators can change or disable the timeout.</item>
+            <item>Replies posted in the TreeK Free tree copy the parent post's title. Use Edit in Kunena to change it. TreeK Pro offers more options for setting and inheriting titles.</item>
+            <item>Use Kunena permissions for reply and edit actions and preserve the current subscription when editing in the tree.</item>
+            <item>TreeK Free works with Kunena 7.0.11, 7.1.0, and 7.1.1.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.10</version>
+        <fix>
+            <item>Check Kunena topic and category read permission before TreeK AJAX reads.</item>
+            <item>Port Kunena security fixes for controller permissions, tokens and escaped template output.</item>
+            <item>Preserve versioned original-file backups across TreeK reinstalls and verify hashes before restoring them.</item>
+            <item>Restored the TreeK AJAX diagnostic log when Debug AJAX log is enabled in the plugin settings.</item>
+            <item>Added a short troubleshooting checklist and diagnostics link to the tree refresh error message.</item>
+        </fix>
+        <change>
+            <item>Use one package per edition for Kunena 7.0 and 7.1 with automatic selection of integration files.</item>
+            <item>Add the system integration monitor and online compatibility catalog on treek.support, with reminders cleared after verified recovery and update advice shown when a newer Kunena version is available.</item>
+            <item>Support Kunena 7.1 notification queues, pending attachments and editor integration.</item>
+            <item>Updated AJAX diagnostics documentation with the Joomla Logging tab path.</item>
+            <item>Documented Joomla 5.4.7+ compatibility for Kunena 7.0.x.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.8</version>
+        <change>
+            <item>TreeK buttons are now hidden from guests when the TreeK AJAX plugin access level is set to Registered.</item>
+            <item>Documented TreeK plugin access level behavior.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.7</version>
+        <fix>
+            <item>Fixed TreeK AJAX URL generation when Joomla is installed in a subdirectory.</item>
+        </fix>
+        <change>
+            <item>Changed the TreeK installation log to English.</item>
+            <item>Added AJAX diagnostics instructions to the installation documentation.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.6</version>
+        <change>
+            <item>Added compatibility updates for Kunena 7.0.8.</item>
+            <item>Updated TreeK documentation to clarify that TreeK should be installed again after a Kunena update.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.5</version>
+        <change>
+            <item>Added compatibility updates for Kunena 7.0.6 and 7.0.7.</item>
+            <item>Made Replies counters in category, user and message topic lists open the TreeK window like Recent Topics.</item>
+            <item>Renamed Show post excerpt settings to Show post beginning.</item>
+            <item>Improved guest-state hints in TreeK Pro settings for saved settings and Forum view options.</item>
+        </change>
+        <fix>
+            <item>Removed a confusing arrow icon from quote headers while keeping the quote source link.</item>
+            <item>Fixed the TreeK template author URL in the Kunena template manifest.</item>
+        </fix>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.4</version>
+        <change>
+            <item>The TreeK settings panel now opens automatically when the TreeK window is opened.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.3</version>
+        <fix>
+            <item>Fixed TreeK Free update metadata so Joomla can match the package update site correctly.</item>
+            <item>Changed the package download URL to the GitHub latest-release download endpoint.</item>
+        </fix>
+        <note>
+            <item>If an older installation does not show TreeK Free updates, install version 2.0.3 manually once. Automatic updates should work after that.</item>
+        </note>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.2</version>
+        <change>
+            <item>Redesigned Heavy grid as CSS tree lines with continuous vertical branches and hover highlighting.</item>
+            <item>Added a text excerpt frame option under Post excerpt - text.</item>
+            <item>Text post excerpts can now be shown either without a frame or with a compact framed bubble.</item>
+        </change>
+        <fix>
+            <item>Heavy grid now keeps visual branches for posts whose original parent is no longer visible in the current topic after moderation.</item>
+        </fix>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.1</version>
+        <fix>
+            <item>Preserve line breaks in text post excerpts and remove extra blank lines between real lines.</item>
+        </fix>
+        <change>
+            <item>Display text post excerpts as compact tooltip-style bubbles.</item>
+            <item>Clarify that TreeK can normally be updated by installing the new package over the existing one.</item>
+        </change>
+    </changelog>
+    <changelog>
+        <element>pkg_treek</element>
+        <type>package</type>
+        <version>2.0.0</version>
+        <addition>
+            <item>Split TreeK into Free and Pro editions.</item>
+            <item>Added Free package build and TreeK Free update server metadata.</item>
+        </addition>
+    </changelog>
+</changelogs>

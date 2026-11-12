@@ -4,6 +4,8 @@ TreeK adds a post tree to Kunena topics. This helps users see the structure of
 responses, switch between related posts, and navigate long discussions without
 losing the context of who replied to whom.
 
+Starting with version 3.1.0, TreeK allows you to reply to posts and edit your own text posts directly within the discussion tree.
+
 The settings of the tree window allow the user to see the content of a single
 post or teasers (beginnings) of all posts on the topic at once, choose a
 convenient tree view, etc. without leaving the tree window.

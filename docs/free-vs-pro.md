@@ -16,6 +16,8 @@ manage paid downloads, update access, and support records.
 
 ## Free
 
+- Reply to posts and edit your own plain-text posts in the tree.
+- The settings window closes after 15 seconds of inactivity by default. Reopen it with **⚙ (Settings)**.
 - Open the post tree from a Kunena topic and from the topics list.
 - Display the post tree.
 - Highlight the latest and active rows.
@@ -33,7 +35,7 @@ manage paid downloads, update access, and support records.
 ## Pro
 
 - Draggable settings window.
-- Tooltips for TreeK buttons and symbols.
+- Tooltips for the additional Pro navigation and highlighting controls.
 - Start row with Author + Subject.
 - Screenshot teaser.
 - Flat list view.
@@ -43,7 +45,7 @@ manage paid downloads, update access, and support records.
 - Export tree as HTML.
 - Topic monitoring notice when a post is added.
 - Comfort form header.
-- Subject suffixes.
+- A Subject field in the compact form, with title inheritance and suffix settings.
 - Collapsed attachments.
 - Inline action buttons.
 
@@ -52,6 +54,4 @@ manage paid downloads, update access, and support records.
 TreeK Free does not include Pro implementation code. Pro options may be shown in
 the Free user interface as locked preview items, but executable Pro features are
 not shipped in the Free package.
-
-
 

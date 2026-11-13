@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.0
+
+- Reply to a specific post and edit your own plain-text posts directly in the tree.
+- Use **F (Open in forum)** for formatting, links, or attachments.
+- A reply copies the title of the post it replies to. Use **Edit** in the full Kunena forum view with the TreeK template to change it.
+- The settings window closes after 15 seconds of inactivity by default. Reopen it with **⚙ (Settings)**.
+- Supports Kunena 7.0.11, 7.1.0, and 7.1.1.
+
+## 2.0.10
+
+- Added one installer with automatic file selection for Kunena 7.0 and 7.1.
+- Added the TreeK integration monitor and compatibility catalog.
+- Improved permission checks, backups, and diagnostics.
+
 ## 2.0.8
 
 - Hide TreeK buttons from guests when the TreeK AJAX plugin access level is set to Registered.

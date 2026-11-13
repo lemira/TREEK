@@ -10,8 +10,7 @@ The settings of the tree window allow the user to see the content of a single
 post or teasers (beginnings) of all posts on the topic at once, choose a
 convenient tree view, etc. without leaving the tree window.
 
-All actions for creating themes, adding and changing posts, etc. are carried out
-in the usual way in Kunena.
+For formatting, links, or attachments, use **F (Open in forum)** to continue in the full Kunena editor.
 
 TreeK is built for Joomla and Kunena Forum.
 
@@ -32,8 +31,7 @@ The Free edition does not contain Pro implementation code.
 
 ## Download
 
-TreeK Free will be published through GitHub Releases and the Joomla Extensions
-Directory.
+Download [TreeK Free from GitHub Releases](https://github.com/lemira/TREEK/releases/latest/download/pkg_treek_free.zip). You can also find it in the [Joomla Extensions Directory](https://extensions.joomla.org/extension/communication/forum-add-ons-autonomous/treek-free/).
 
 TreeK Pro is distributed separately. It can be fully tested on the project site, for example in this forum topic:
 
@@ -65,11 +63,7 @@ screenshots/slides, forum examples, and a feedback forum.
 
 This repository is the public information and release home for TreeK Free.
 
-It intentionally does not contain:
-
-- TreeK source code;
-- TreeK Pro installation packages;
-- internal build scripts or private packaging assets.
+Install TreeK Free using the package attached to the latest release.
 
 ## Support
 
